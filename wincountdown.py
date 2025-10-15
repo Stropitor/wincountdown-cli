@@ -239,13 +239,13 @@ def draw_static_ui(total_seconds, show_hours, show_minutes, metric=False):
     
     # Top border with decoration
     print("\n")
-    print("  +" + "=" * 120 + "+")
-    print("  |" + " " * 120 + "|")
+    print("  +" + "=" * 115 + "+")
+    print("  |" + " " * 115 + "|")
     title = f">>>  C O U N T D O W N  [ {time_display} ]  <<<"
-    padding = (120 - len(title)) // 2
-    print("  |" + " " * padding + title + " " * (120 - padding - len(title)) + "|")
-    print("  |" + " " * 120 + "|")
-    print("  +" + "=" * 120 + "+")
+    padding = (115 - len(title)) // 2
+    print("  |" + " " * padding + title + " " * (115 - padding - len(title)) + "|")
+    print("  |" + " " * 115 + "|")
+    print("  +" + "=" * 115 + "+")
     print()
     print()
     
@@ -257,11 +257,11 @@ def draw_static_ui(total_seconds, show_hours, show_minutes, metric=False):
     print()
     
     # Bottom decoration
-    print("  +" + "=" * 120 + "+")
+    print("  +" + "=" * 115 + "+")
     footer = "Press Ctrl+C to stop"
-    padding = (120 - len(footer)) // 2
-    print("  |" + " " * padding + footer + " " * (120 - padding - len(footer)) + "|")
-    print("  +" + "=" * 120 + "+")
+    padding = (115 - len(footer)) // 2
+    print("  |" + " " * padding + footer + " " * (115 - padding - len(footer)) + "|")
+    print("  +" + "=" * 115 + "+")
     print("  stropitor")
 
 def update_time_display(hours, minutes, seconds, show_hours, show_minutes):
@@ -272,15 +272,15 @@ def update_time_display(hours, minutes, seconds, show_hours, show_minutes):
     time_width = len(lines[0])
     
     # Center within the 120-character box (plus 2 spaces margin on left for the border)
-    x_offset = 2 + (120 - time_width) // 2
+    x_offset = 2 + (115 - time_width) // 2
     
     # Draw all lines in one pass to avoid distortion
     for i, line in enumerate(lines):
         set_cursor_position(0, 8 + i)
         # Clear entire line and write the centered content in one go
-        # Total width is 124 (2 spaces + | + 120 + |)
+        # Total width is 119 (2 spaces + | + 115 + |)
         centered_line = " " * x_offset + line + " " * (124 - x_offset - len(line))
-        print(centered_line[:124], end='', flush=True)
+        print(centered_line[:119], end='', flush=True)
 
 def countdown(total_seconds, beep_freq=800, beep_count=3, beep_duration=1000, beep_gap=300, silent=False, loop=False, metric=False):
     """Run the countdown timer"""
