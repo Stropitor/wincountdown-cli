@@ -21,8 +21,8 @@ wincountdown <time> [options]
 
 ### Time Formats
 
-- Seconds only: `30s`, `90s`, `500s`
-- Minutes only: `5m`, `45m`, `240m`
+- Seconds only: `30s`, `90s`, `500s (converts to MM:SS)`
+- Minutes only: `5m`, `45m`, `240m (converts to HH:MM:SS)`
 - Hours only: `2h`, `10h`
 - Combined: `1h30m`, `2h15m30s`, `45m30s`
 - Colon format: `1:30:00` (HH:MM:SS), `45:30` (MM:SS)
