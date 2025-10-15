@@ -87,7 +87,7 @@ The executable will be in the `dist/` folder.
 
 Requirements: Python 3.8+
 ```bash
-git clone https://github.com/yourusername/wincountdown.git
+git clone https://github.com/Stropitor/wincountdown-cli
 cd wincountdown
 python wincountdown.py
 ```
