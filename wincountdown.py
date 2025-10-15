@@ -271,16 +271,18 @@ def update_time_display(hours, minutes, seconds, show_hours, show_minutes):
     # Calculate the actual width of the time display
     time_width = len(lines[0])
     
-    # Center within the 120-character box (plus 2 spaces margin on left for the border)
-    x_offset = 2 + (115 - time_width) // 2
+    # Center within the 115-character box (plus 2 spaces + | on left = 3 chars)
+    x_offset = 3 + (115 - time_width) // 2
     
     # Draw all lines in one pass to avoid distortion
     for i, line in enumerate(lines):
         set_cursor_position(0, 8 + i)
-        # Clear entire line and write the centered content in one go
-        # Total width is 119 (2 spaces + | + 115 + |)
-        centered_line = " " * x_offset + line + " " * (124 - x_offset - len(line))
-        print(centered_line[:119], end='', flush=True)
+        # Total terminal width needs padding to clear the line
+        # Create spacing + content + spacing (no borders on these lines)
+        left_padding = " " * (x_offset)
+        right_padding = " " * (120 - x_offset - time_width)
+        full_line = left_padding + line.rstrip() + right_padding
+        print(full_line[:120], end='', flush=True)
 
 def countdown(total_seconds, beep_freq=800, beep_count=3, beep_duration=1000, beep_gap=300, silent=False, loop=False, metric=False):
     """Run the countdown timer"""
@@ -339,16 +341,16 @@ def countdown(total_seconds, beep_freq=800, beep_count=3, beep_duration=1000, be
             # Time's up!
             clear_screen()
             print("\n")
-            print("  +" + "=" * 120 + "+")
-            print("  |" + " " * 120 + "|")
+            print("  +" + "=" * 115 + "+")
+            print("  |" + " " * 115 + "|")
             if loop:
                 title = ">>>  R E S T A R T I N G . . .  <<<"
             else:
                 title = ">>>  T I M E ' S   U P !  <<<"
-            padding = (120 - len(title)) // 2
-            print("  |" + " " * padding + title + " " * (120 - padding - len(title)) + "|")
-            print("  |" + " " * 120 + "|")
-            print("  +" + "=" * 120 + "+")
+            padding = (115 - len(title)) // 2
+            print("  |" + " " * padding + title + " " * (115 - padding - len(title)) + "|")
+            print("  |" + " " * 115 + "|")
+            print("  +" + "=" * 115 + "+")
             print()
             print()
             
@@ -362,16 +364,16 @@ def countdown(total_seconds, beep_freq=800, beep_count=3, beep_duration=1000, be
             
             # Center the final time display
             time_width = len(lines[0])
-            x_offset = 2 + (120 - time_width) // 2
+            x_offset = 2 + (115 - time_width) // 2
                 
             for line in lines:
                 print(" " * x_offset + line)
             
             print()
             print()
-            print("  +" + "=" * 120 + "+")
-            print("  |" + " " * 120 + "|")
-            print("  +" + "=" * 120 + "+")
+            print("  +" + "=" * 115 + "+")
+            print("  |" + " " * 115 + "|")
+            print("  +" + "=" * 115 + "+")
             print("  stropitor")
             
             # Play a beep sound alert (unless silent)
