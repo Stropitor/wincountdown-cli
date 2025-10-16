@@ -9,9 +9,17 @@ import shlex
 from ctypes import wintypes
 from datetime import datetime
 
-# Configuration file path
-CONFIG_FILE = "wincountdown-config.json"
-DEBUG_LOG_FILE = "wincountdown-debug.log"
+# Get the directory where the script/executable is located
+if getattr(sys, 'frozen', False):
+    # Running as compiled executable
+    SCRIPT_DIR = os.path.dirname(sys.executable)
+else:
+    # Running as script
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Configuration file path (always in the same directory as the executable/script)
+CONFIG_FILE = os.path.join(SCRIPT_DIR, "wincountdown-config.json")
+DEBUG_LOG_FILE = os.path.join(SCRIPT_DIR, "wincountdown-debug.log")
 
 # DEBUG will be loaded from config
 DEBUG = False
