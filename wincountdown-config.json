@@ -71,5 +71,127 @@
     "//timeonly_flags4": "  Example: [\"-f\", \"1000\", \"-b\", \"5\"] = 1000Hz frequency, 5 beeps",
     "//timeonly_flags5": "Available flags: -s (silent), -l (loop), -m (metric),",
     "//timeonly_flags6": "  -f <hz> (frequency), -b <n> (beeps), -d <ms> (duration), -g <ms> (gap)",
-    "//timeonly_flags7": "Note: Only applies when JUST time is typed. Manual flags disable this."
+    "//timeonly_flags7": "Note: Only applies when JUST time is typed. Manual flags disable this.",
+    
+    "//separator4": "",
+    "//ascii_art_section": "=== ASCII ART CUSTOMIZATION ===",
+    "//ascii_art1": "Customize the appearance of digits (0-9) and colon (:) in the countdown display",
+    "//ascii_art2": "Each digit must be exactly 8 lines tall and have consistent width",
+    "//ascii_art3": "Use any characters you want: #, *, @, █, ░, etc.",
+    "//ascii_art4": "TIP: Keep all digits the same width for best alignment (11 chars recommended)",
+    "//ascii_art5": "TIP: Preview your changes by running a short countdown like: wincountdown 10s",
+    "//ascii_art6": "",
+    
+    "ascii_digits": {
+        "0": [
+            " ######### ",
+            "###     ###",
+            "###     ###",
+            "###     ###",
+            "###     ###",
+            "###     ###",
+            "###     ###",
+            " ######### "
+        ],
+        "1": [
+            "    ###    ",
+            "  #####    ",
+            "    ###    ",
+            "    ###    ",
+            "    ###    ",
+            "    ###    ",
+            "    ###    ",
+            "###########"
+        ],
+        "2": [
+            " ######### ",
+            "###     ###",
+            "        ###",
+            "      ###  ",
+            "    ###    ",
+            "  ###      ",
+            " ###       ",
+            "###########"
+        ],
+        "3": [
+            "###########",
+            "        ###",
+            "        ###",
+            "  #########",
+            "        ###",
+            "        ###",
+            "        ###",
+            "###########"
+        ],
+        "4": [
+            "     ##### ",
+            "    ###### ",
+            "   ### ### ",
+            "  ###  ### ",
+            " ###   ### ",
+            "###########",
+            "       ### ",
+            "       ### "
+        ],
+        "5": [
+            "###########",
+            "###        ",
+            "###        ",
+            "###########",
+            "        ###",
+            "        ###",
+            "###     ###",
+            " ######### "
+        ],
+        "6": [
+            "  #########",
+            " ###       ",
+            "###        ",
+            "###########",
+            "###     ###",
+            "###     ###",
+            "###     ###",
+            " ######### "
+        ],
+        "7": [
+            "###########",
+            "        ###",
+            "       ### ",
+            "      ###  ",
+            "     ###   ",
+            "    ###    ",
+            "   ###     ",
+            "   ###     "
+        ],
+        "8": [
+            " ######### ",
+            "###     ###",
+            "###     ###",
+            " ######### ",
+            "###     ###",
+            "###     ###",
+            "###     ###",
+            " ######### "
+        ],
+        "9": [
+            " ######### ",
+            "###     ###",
+            "###     ###",
+            "###     ###",
+            " ##########",
+            "        ###",
+            "       ### ",
+            "########   "
+        ],
+        ":": [
+            "           ",
+            "    ###    ",
+            "    ###    ",
+            "           ",
+            "           ",
+            "    ###    ",
+            "    ###    ",
+            "           "
+        ]
+    }
 }

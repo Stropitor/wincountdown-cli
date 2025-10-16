@@ -34,6 +34,120 @@ def debug_log(message):
         # Also print to console
         print(log_message.rstrip())
 
+# Default ASCII art for digits
+DEFAULT_ASCII_DIGITS = {
+    '0': [
+        " ######### ",
+        "###     ###",
+        "###     ###",
+        "###     ###",
+        "###     ###",
+        "###     ###",
+        "###     ###",
+        " ######### "
+    ],
+    '1': [
+        "    ###    ",
+        "  #####    ",
+        "    ###    ",
+        "    ###    ",
+        "    ###    ",
+        "    ###    ",
+        "    ###    ",
+        "###########"
+    ],
+    '2': [
+        " ######### ",
+        "###     ###",
+        "        ###",
+        "      ###  ",
+        "    ###    ",
+        "  ###      ",
+        " ###       ",
+        "###########"
+    ],
+    '3': [
+        "###########",
+        "        ###",
+        "        ###",
+        "  #########",
+        "        ###",
+        "        ###",
+        "        ###",
+        "###########"
+    ],
+    '4': [
+        "     ##### ",
+        "    ###### ",
+        "   ### ### ",
+        "  ###  ### ",
+        " ###   ### ",
+        "###########",
+        "       ### ",
+        "       ### "
+    ],
+    '5': [
+        "###########",
+        "###        ",
+        "###        ",
+        "###########",
+        "        ###",
+        "        ###",
+        "###     ###",
+        " ######### "
+    ],
+    '6': [
+        "  #########",
+        " ###       ",
+        "###        ",
+        "###########",
+        "###     ###",
+        "###     ###",
+        "###     ###",
+        " ######### "
+    ],
+    '7': [
+        "###########",
+        "        ###",
+        "       ### ",
+        "      ###  ",
+        "     ###   ",
+        "    ###    ",
+        "   ###     ",
+        "   ###     "
+    ],
+    '8': [
+        " ######### ",
+        "###     ###",
+        "###     ###",
+        " ######### ",
+        "###     ###",
+        "###     ###",
+        "###     ###",
+        " ######### "
+    ],
+    '9': [
+        " ######### ",
+        "###     ###",
+        "###     ###",
+        "###     ###",
+        " ##########",
+        "        ###",
+        "       ### ",
+        "########   "
+    ],
+    ':': [
+        "           ",
+        "    ###    ",
+        "    ###    ",
+        "           ",
+        "           ",
+        "    ###    ",
+        "    ###    ",
+        "           "
+    ]
+}
+
 # Default configuration
 DEFAULT_CONFIG = {
     "debug_mode": False,
@@ -47,7 +161,8 @@ DEFAULT_CONFIG = {
     "enable_no_args_default": False,
     "no_args_default_command": "help",
     "enable_time_only_defaults": False,
-    "time_only_default_flags": []
+    "time_only_default_flags": [],
+    "ascii_digits": DEFAULT_ASCII_DIGITS
 }
 
 def create_config_with_comments():
@@ -125,7 +240,129 @@ def create_config_with_comments():
     "//timeonly_flags4": "  Example: [\\"-f\\\", \\\"1000\\\", \\\"-b\\\", \\\"5\\\"] = 1000Hz frequency, 5 beeps",
     "//timeonly_flags5": "Available flags: -s (silent), -l (loop), -m (metric),",
     "//timeonly_flags6": "  -f <hz> (frequency), -b <n> (beeps), -d <ms> (duration), -g <ms> (gap)",
-    "//timeonly_flags7": "Note: Only applies when JUST time is typed. Manual flags disable this."
+    "//timeonly_flags7": "Note: Only applies when JUST time is typed. Manual flags disable this.",
+    
+    "//separator4": "",
+    "//ascii_art_section": "=== ASCII ART CUSTOMIZATION ===",
+    "//ascii_art1": "Customize the appearance of digits (0-9) and colon (:) in the countdown display",
+    "//ascii_art2": "Each digit must be exactly 8 lines tall and have consistent width",
+    "//ascii_art3": "Use any characters you want: #, *, @, █, ░, etc.",
+    "//ascii_art4": "TIP: Keep all digits the same width for best alignment (11 chars recommended)",
+    "//ascii_art5": "TIP: Preview your changes by running a short countdown like: wincountdown 10s",
+    "//ascii_art6": "",
+    
+    "ascii_digits": {
+        "0": [
+            " ######### ",
+            "###     ###",
+            "###     ###",
+            "###     ###",
+            "###     ###",
+            "###     ###",
+            "###     ###",
+            " ######### "
+        ],
+        "1": [
+            "    ###    ",
+            "  #####    ",
+            "    ###    ",
+            "    ###    ",
+            "    ###    ",
+            "    ###    ",
+            "    ###    ",
+            "###########"
+        ],
+        "2": [
+            " ######### ",
+            "###     ###",
+            "        ###",
+            "      ###  ",
+            "    ###    ",
+            "  ###      ",
+            " ###       ",
+            "###########"
+        ],
+        "3": [
+            "###########",
+            "        ###",
+            "        ###",
+            "  #########",
+            "        ###",
+            "        ###",
+            "        ###",
+            "###########"
+        ],
+        "4": [
+            "     ##### ",
+            "    ###### ",
+            "   ### ### ",
+            "  ###  ### ",
+            " ###   ### ",
+            "###########",
+            "       ### ",
+            "       ### "
+        ],
+        "5": [
+            "###########",
+            "###        ",
+            "###        ",
+            "###########",
+            "        ###",
+            "        ###",
+            "###     ###",
+            " ######### "
+        ],
+        "6": [
+            "  #########",
+            " ###       ",
+            "###        ",
+            "###########",
+            "###     ###",
+            "###     ###",
+            "###     ###",
+            " ######### "
+        ],
+        "7": [
+            "###########",
+            "        ###",
+            "       ### ",
+            "      ###  ",
+            "     ###   ",
+            "    ###    ",
+            "   ###     ",
+            "   ###     "
+        ],
+        "8": [
+            " ######### ",
+            "###     ###",
+            "###     ###",
+            " ######### ",
+            "###     ###",
+            "###     ###",
+            "###     ###",
+            " ######### "
+        ],
+        "9": [
+            " ######### ",
+            "###     ###",
+            "###     ###",
+            "###     ###",
+            " ##########",
+            "        ###",
+            "       ### ",
+            "########   "
+        ],
+        ":": [
+            "           ",
+            "    ###    ",
+            "    ###    ",
+            "           ",
+            "           ",
+            "    ###    ",
+            "    ###    ",
+            "           "
+        ]
+    }
 }'''
     return config_content
 
@@ -140,7 +377,7 @@ def load_config():
     if not os.path.exists(CONFIG_FILE):
         # Create config file with detailed comments
         debug_log("Config file does not exist, creating new one")
-        with open(CONFIG_FILE, 'w') as f:
+        with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
             f.write(create_config_with_comments())
         print(f"Created default configuration file: {CONFIG_FILE}")
         print("You can edit this file to customize default settings.\n")
@@ -148,7 +385,7 @@ def load_config():
     
     try:
         debug_log("Attempting to read config file")
-        with open(CONFIG_FILE, 'r') as f:
+        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
             config = json.load(f)
         
         debug_log(f"Raw config loaded from file: {config}")
@@ -161,6 +398,18 @@ def load_config():
         # Merge with defaults to ensure all keys exist
         merged_config = DEFAULT_CONFIG.copy()
         merged_config.update(filtered_config)
+        
+        # Validate ascii_digits if present
+        if 'ascii_digits' in filtered_config:
+            ascii_digits = filtered_config['ascii_digits']
+            # Validate that all required digits are present and properly formatted
+            for digit in '0123456789:':
+                if digit not in ascii_digits:
+                    debug_log(f"Warning: Missing ASCII art for '{digit}', using default")
+                    ascii_digits[digit] = DEFAULT_ASCII_DIGITS[digit]
+                elif not isinstance(ascii_digits[digit], list) or len(ascii_digits[digit]) != 8:
+                    debug_log(f"Warning: Invalid ASCII art for '{digit}' (must be 8 lines), using default")
+                    ascii_digits[digit] = DEFAULT_ASCII_DIGITS[digit]
         
         # Update global DEBUG variable from config
         DEBUG = merged_config.get('debug_mode', False)
@@ -264,123 +513,11 @@ def clear_screen():
     """Clear screen once at the start"""
     os.system('cls')
 
-def get_ascii_digit(digit):
-    """Return ASCII art for a single digit - bigger, blockier style"""
-    digits = {
-        '0': [
-            " ######### ",
-            "###     ###",
-            "###     ###",
-            "###     ###",
-            "###     ###",
-            "###     ###",
-            "###     ###",
-            " ######### "
-        ],
-        '1': [
-            "    ###    ",
-            "  #####    ",
-            "    ###    ",
-            "    ###    ",
-            "    ###    ",
-            "    ###    ",
-            "    ###    ",
-            "###########"
-        ],
-        '2': [
-            " ######### ",
-            "###     ###",
-            "        ###",
-            "      ###  ",
-            "    ###    ",
-            "  ###      ",
-            " ###       ",
-            "###########"
-        ],
-        '3': [
-            "###########",
-            "        ###",
-            "        ###",
-            "  #########",
-            "        ###",
-            "        ###",
-            "        ###",
-            "###########"
-        ],
-        '4': [
-            "     ##### ",
-            "    ###### ",
-            "   ### ### ",
-            "  ###  ### ",
-            " ###   ### ",
-            "###########",
-            "       ### ",
-            "       ### "
-        ],
-        '5': [
-            "###########",
-            "###        ",
-            "###        ",
-            "###########",
-            "        ###",
-            "        ###",
-            "###     ###",
-            " ######### "
-        ],
-        '6': [
-            "  #########",
-            " ###       ",
-            "###        ",
-            "###########",
-            "###     ###",
-            "###     ###",
-            "###     ###",
-            " ######### "
-        ],
-        '7': [
-            "###########",
-            "        ###",
-            "       ### ",
-            "      ###  ",
-            "     ###   ",
-            "    ###    ",
-            "   ###     ",
-            "   ###     "
-        ],
-        '8': [
-            " ######### ",
-            "###     ###",
-            "###     ###",
-            " ######### ",
-            "###     ###",
-            "###     ###",
-            "###     ###",
-            " ######### "
-        ],
-        '9': [
-            " ######### ",
-            "###     ###",
-            "###     ###",
-            "###     ###",
-            " ##########",
-            "        ###",
-            "       ### ",
-            "########   "
-        ],
-        ':': [
-            "           ",
-            "    ###    ",
-            "    ###    ",
-            "           ",
-            "           ",
-            "    ###    ",
-            "    ###    ",
-            "           "
-        ]
-    }
-    return digits.get(digit, ["           "] * 8)
+def get_ascii_digit(digit, ascii_art):
+    """Return ASCII art for a single digit from config"""
+    return ascii_art.get(digit, ["           "] * 8)
 
-def render_time(hours, minutes, seconds, show_hours, show_minutes):
+def render_time(hours, minutes, seconds, show_hours, show_minutes, ascii_art):
     """Render time as ASCII art - only show relevant units"""
     if show_hours:
         time_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
@@ -391,7 +528,7 @@ def render_time(hours, minutes, seconds, show_hours, show_minutes):
     
     lines = [""] * 8
     for char in time_str:
-        digit_art = get_ascii_digit(char)
+        digit_art = get_ascii_digit(char, ascii_art)
         for i in range(8):
             lines[i] += digit_art[i] + "  "
     
@@ -503,9 +640,9 @@ def draw_static_ui(total_seconds, show_hours, show_minutes, metric=False, start_
     print("  +" + "=" * 115 + "+")
     print("  stropitor")
 
-def update_time_display(hours, minutes, seconds, show_hours, show_minutes):
+def update_time_display(hours, minutes, seconds, show_hours, show_minutes, ascii_art):
     """Update only the time display portion"""
-    lines = render_time(hours, minutes, seconds, show_hours, show_minutes)
+    lines = render_time(hours, minutes, seconds, show_hours, show_minutes, ascii_art)
     
     # Calculate the actual width of the time display
     time_width = len(lines[0])
@@ -523,8 +660,11 @@ def update_time_display(hours, minutes, seconds, show_hours, show_minutes):
         full_line = left_padding + line.rstrip() + right_padding
         print(full_line[:120], end='', flush=True)
 
-def countdown(total_seconds, beep_freq=800, beep_count=3, beep_duration=1000, beep_gap=300, silent=False, loop=False, metric=False):
+def countdown(total_seconds, beep_freq=800, beep_count=3, beep_duration=1000, beep_gap=300, silent=False, loop=False, metric=False, ascii_art=None):
     """Run the countdown timer"""
+    if ascii_art is None:
+        ascii_art = DEFAULT_ASCII_DIGITS
+    
     hide_cursor()
     
     # For metric mode, we're working in milliseconds
@@ -586,7 +726,7 @@ def countdown(total_seconds, beep_freq=800, beep_count=3, beep_duration=1000, be
                         minutes = (remaining % 3600) // 60
                         seconds = remaining % 60
                     
-                    update_time_display(hours, minutes, seconds, show_hours, show_minutes)
+                    update_time_display(hours, minutes, seconds, show_hours, show_minutes, ascii_art)
                     last_remaining = remaining
                 
                 time.sleep(0.01 if metric else 0.05)  # Check more frequently in metric mode
@@ -609,11 +749,11 @@ def countdown(total_seconds, beep_freq=800, beep_count=3, beep_duration=1000, be
             
             # Show final time in same format
             if show_hours:
-                lines = render_time(0, 0, 0, True, True)
+                lines = render_time(0, 0, 0, True, True, ascii_art)
             elif show_minutes:
-                lines = render_time(0, 0, 0, False, True)
+                lines = render_time(0, 0, 0, False, True, ascii_art)
             else:
-                lines = render_time(0, 0, 0, False, False)
+                lines = render_time(0, 0, 0, False, False, ascii_art)
             
             # Center the final time display
             time_width = len(lines[0])
@@ -713,6 +853,7 @@ def print_help():
       - Default silent, loop, and metric mode settings
       - Behavior when running 'wincountdown' with no arguments
       - Auto-apply flags when only providing a time argument
+      - ASCII art for digits 0-9 and colon (:)
 
     See the config file for detailed comments on each option.
 
@@ -754,6 +895,7 @@ def print_help():
     Metric mode               Input real time, display as metric (1h=100m, 1m=100s)
                               Each metric second lasts 1 real second
     Config file               Edit wincountdown-config.json to customize defaults
+    ASCII art                 Customize digit appearance in config file
 
   +===================================================================================================================+
 
@@ -861,6 +1003,9 @@ def main():
     # Handle metric mode
     metric_mode = args.metric
     
+    # Get ASCII art from config
+    ascii_art = config.get('ascii_digits', DEFAULT_ASCII_DIGITS)
+    
     try:
         total_seconds = parse_time(args.time, metric_mode)
         if total_seconds <= 0:
@@ -885,7 +1030,7 @@ def main():
                 print(f"You requested: {total_seconds // 3600:02d}:{(total_seconds % 3600) // 60:02d}:{total_seconds % 60:02d}")
             sys.exit(1)
         
-        countdown(total_seconds, args.freq, args.beeps, args.duration, args.gap, args.silent, args.loop, metric_mode)
+        countdown(total_seconds, args.freq, args.beeps, args.duration, args.gap, args.silent, args.loop, metric_mode, ascii_art)
     except ValueError:
         print("Error: Invalid time format")
         sys.exit(1)
