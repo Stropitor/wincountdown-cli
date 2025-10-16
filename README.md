@@ -8,6 +8,7 @@ A command-line countdown timer for Windows with ASCII art display and customizab
 ## Features
 
 - Large ASCII art countdown display
+- Real-time start and end time display
 - Customizable beep alerts (frequency, duration, count, gap)
 - Loop mode for repeating countdowns
 - Silent mode option
@@ -116,6 +117,7 @@ Adding wincountdown to PATH allows runing the tool from any terminal.
 
 - Maximum time: 99:59:59 (or 99:99:99 in metric mode)
 - The timer automatically shows only relevant units (seconds, MM:SS, or HH:MM:SS)
+- Start time and end time are displayed at the bottom of the timer
 - Beep alert plays when countdown finishes (customizable)
 - Loop mode plays only one beep before restarting
 - Metric mode is a joke option where 1 hour = 100 minutes and 1 minute = 100 seconds. Each metric second lasts 1 real second. Input time is still in real time.

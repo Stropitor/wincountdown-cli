@@ -433,48 +433,107 @@ def countdown(total_seconds, beep_freq=800, beep_count=3, beep_duration=1000, be
     finally:
         show_cursor()
 
+def print_help():
+    """Print a beautifully formatted help screen"""
+    help_text = """
+  +===================================================================================================================+
+  |                                                                                                                   |
+  |      ##      ## #### ##     ##  ####   ####  ##     ## ##     ## ######## ####    ####  ##      ## ##     ##      |
+  |      ##  ##  ##  ##  ###    ## ##  ## ##  ## ##     ## ###    ##    ##    ##  ## ##  ## ##  ##  ## ###    ##      |
+  |      ##  ##  ##  ##  ####   ## ##     ##  ## ##     ## ####   ##    ##    ##  ## ##  ## ##  ##  ## ####   ##      |
+  |      ##  ##  ##  ##  ## ##  ## ##     ##  ## ##     ## ## ##  ##    ##    ##  ## ##  ## ##  ##  ## ## ##  ##      |
+  |      ##  ##  ##  ##  ##  ## ## ##     ##  ## ##     ## ##  ## ##    ##    ##  ## ##  ## ##  ##  ## ##  ## ##      |
+  |      ##  ##  ##  ##  ##   #### ##  ## ##  ## ##     ## ##   ####    ##    ##  ## ##  ## ##  ##  ## ##   ####      |
+  |      ###    ### #### ##    ###  ####   ####   #######  ##    ###    ##    ####    ####   ###  ###  ##    ###      |
+  |                                                                                                                   |
+  +===================================================================================================================+
+
+  A countdown timer with ASCII art display and customizable beep alerts.
+
+  +===================================================================================================================+
+  | USAGE                                                                                                             |
+  +===================================================================================================================+
+
+    wincountdown <time> [options]
+
+  +===================================================================================================================+
+  | TIME FORMATS                                                                                                      |
+  +===================================================================================================================+
+
+    Seconds only     30s, 90s, 500s
+    Minutes only     5m, 45m, 240m
+    Hours only       2h, 10h
+    Combined         1h30m, 2h15m30s, 45m30s
+    Colon format     1:30:00 (HH:MM:SS), 45:30 (MM:SS)
+
+  +===================================================================================================================+
+  | OPTIONS                                                                                                           |
+  +===================================================================================================================+
+
+    -s, --silent              Silent mode (no beep alert)
+    -f HZ, --freq HZ          Beep frequency in Hz (default: 800, range: 37-32767)
+    -b N, --beeps N           Number of beeps when finished (default: 3)
+    -d MS, --duration MS      Duration of each beep in milliseconds (default: 1000)
+    -g MS, --gap MS           Gap between beeps in milliseconds (default: 300)
+    -l, --loop                Automatically restart countdown when it reaches 0
+    -m, --metric              JOKE: Display in metric time (1h=100m, 1m=100s)
+    -h, --help                Show this help message
+
+  +===================================================================================================================+
+  | EXAMPLES                                                                                                          |
+  +===================================================================================================================+
+
+    Basic countdowns
+      wincountdown 30s                       30 second countdown
+      wincountdown 5m                        5 minute countdown
+      wincountdown 1h30m                     1 hour 30 minutes
+      wincountdown 90s                       Automatically displays as 01:30
+
+    Silent and loop modes
+      wincountdown 10m --silent              No beep alert
+      wincountdown 25m --loop                Repeating timer
+      wincountdown 5m -l -s                  Loop mode, silent
+
+    Custom beep patterns
+      wincountdown 1m --freq 440             Use 440Hz beep
+      wincountdown 30s --beeps 5             Beep 5 times
+      wincountdown 1h --duration 500         500ms beeps
+      wincountdown 5m --gap 100              100ms gap between beeps
+      wincountdown 1m -f 880 -b 3 -d 200     Fully custom pattern
+
+    Metric time (joke mode)
+      wincountdown 5m --metric               5 real minutes in metric display
+      wincountdown 1h -m                     1 real hour in metric display
+
+  +===================================================================================================================+
+  | NOTES                                                                                                             |
+  +===================================================================================================================+
+
+    Maximum time              99:59:59 (or 99:99:99 in metric mode)
+    Display                   Automatically shows only relevant units
+    Default beep              800Hz, 1000ms, 3 times
+    Loop mode beep            Only one beep before restarting
+    Stop timer                Press Ctrl+C at any time
+    Metric mode               Input real time, display as metric (1h=100m, 1m=100s)
+                              Each metric second lasts 1 real second
+
+  +===================================================================================================================+
+
+  Created by stropitor
+"""
+    print(help_text)
+
 def main():
+    # Check for help flag before parsing
+    if '-h' in sys.argv or '--help' in sys.argv:
+        print_help()
+        sys.exit(0)
+    
     parser = argparse.ArgumentParser(
         prog='wincountdown',
         description='A countdown timer with ASCII art display for Windows',
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog='''
-Time Format Options:
-  Seconds only:     30s, 90s, 500s
-  Minutes only:     5m, 45m, 240m
-  Hours only:       2h, 10h
-  Combined:         1h30m, 2h15m30s, 45m30s
-  Colon format:     1:30:00 (HH:MM:SS), 45:30 (MM:SS)
-
-Examples:
-  wincountdown 30s                    - 30 second countdown
-  wincountdown 90s                    - 1 minute 30 seconds (displays as 01:30)
-  wincountdown 5m                     - 5 minute countdown
-  wincountdown 300s                   - 5 minutes (displays as 05:00)
-  wincountdown 1h30m                  - 1 hour 30 minute countdown
-  wincountdown 2h15m30s               - 2 hours 15 minutes 30 seconds
-  wincountdown 45:30                  - 45 minutes 30 seconds
-  wincountdown 5m --silent            - Silent countdown (no beep)
-  wincountdown 10m --loop             - Loop continuously (beeps once per loop)
-  wincountdown 30s --freq 880         - Use 880Hz beep frequency
-  wincountdown 1m --beeps 3           - Beep 3 times when finished
-  wincountdown 5m --duration 500      - Each beep lasts 500ms
-  wincountdown 30s --gap 100          - 100ms gap between beeps
-  wincountdown 30s -f 880 -b 3 -d 500 - 880Hz beep, 3 times, 500ms each
-  wincountdown 1m -f 440 -b 5 -d 200 -g 100 - Custom beep pattern
-  wincountdown 5m -l -s               - Loop mode, silent
-  wincountdown 5m --metric            - JOKE: 5 real minutes displayed as metric time
-  wincountdown 1h -m                  - JOKE: 1 real hour displayed as metric time
-
-Notes:
-  - Maximum time: 99:59:59
-  - The timer automatically shows only relevant units
-  - When countdown finishes, plays a beep (800Hz, 1000ms, 3 times by default)
-  - In loop mode, plays only one beep before restarting
-  - Press Ctrl+C to stop the timer at any time
-  - Metric mode (JOKE): Input real time, display as metric (1h=100m, 1m=100s)
-    Each metric second lasts 1 real second. Example: 60 real seconds = 60 metric seconds
-        '''
+        add_help=False  # Disable default help to use custom
     )
     
     parser.add_argument('time', nargs='?', help='Time duration (e.g., 30s, 5m, 1h30m, 1:30:00)')
@@ -494,9 +553,9 @@ Notes:
     
     args = parser.parse_args()
     
-    # Show help if no time argument provided
+    # Show custom help if no time argument provided
     if not args.time:
-        parser.print_help()
+        print_help()
         sys.exit(1)
     
     # Validate frequency range
