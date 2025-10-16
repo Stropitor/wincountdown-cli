@@ -4,7 +4,223 @@ import os
 import ctypes
 import winsound
 import argparse
+import json
+import shlex
 from ctypes import wintypes
+from datetime import datetime
+
+# Configuration file path
+CONFIG_FILE = "wincountdown-config.json"
+DEBUG_LOG_FILE = "wincountdown-debug.log"
+
+# DEBUG will be loaded from config
+DEBUG = False
+
+def debug_log(message):
+    """Write debug message to log file if DEBUG is enabled"""
+    if DEBUG:
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+        log_message = f"[{timestamp}] {message}\n"
+        with open(DEBUG_LOG_FILE, 'a', encoding='utf-8') as f:
+            f.write(log_message)
+        # Also print to console
+        print(log_message.rstrip())
+
+# Default configuration
+DEFAULT_CONFIG = {
+    "debug_mode": False,
+    "default_frequency": 800,
+    "default_beeps": 3,
+    "default_duration": 1000,
+    "default_gap": 300,
+    "default_silent": False,
+    "default_loop": False,
+    "default_metric": False,
+    "enable_no_args_default": False,
+    "no_args_default_command": "help",
+    "enable_time_only_defaults": False,
+    "time_only_default_flags": []
+}
+
+def create_config_with_comments():
+    """Create a configuration file with detailed comments"""
+    config_content = '''{
+    "//": "================================================================",
+    "//1": "WINCOUNTDOWN CONFIGURATION FILE",
+    "//2": "================================================================",
+    "//3": "This file controls default settings for the wincountdown timer.",
+    "//4": "Edit values below to customize behavior.",
+    "//5": "",
+    
+    "//debug_section": "--- DEBUG MODE ---",
+    "//debug_desc": "Enable debug logging to wincountdown-debug.log for troubleshooting",
+    
+    "debug_mode": false,
+    "//debug_note": "Set to true to enable detailed debug logging. Creates wincountdown-debug.log file with timestamps.",
+    
+    "//separator1": "",
+    "//basic": "--- BASIC DEFAULTS ---",
+    "//basic1": "These settings apply to all countdown executions unless overridden by command-line flags",
+    
+    "default_frequency": 800,
+    "//freq": "Beep frequency in Hz (range: 37-32767). Common: 440 (A note), 800 (default), 1000 (high)",
+    
+    "default_beeps": 3,
+    "//beeps": "Number of beeps when countdown finishes (minimum: 1)",
+    
+    "default_duration": 1000,
+    "//duration": "Duration of each beep in milliseconds (1000ms = 1 second)",
+    
+    "default_gap": 300,
+    "//gap": "Gap between beeps in milliseconds (only applies when beeps > 1)",
+    
+    "default_silent": false,
+    "//silent": "Silent mode: true = no beeps by default, false = beeps enabled",
+    
+    "default_loop": false,
+    "//loop": "Loop mode: true = auto-restart after finish, false = stop after finish",
+    
+    "default_metric": false,
+    "//metric": "Metric mode (joke): true = display in metric time (1h=100m, 1m=100s), false = normal time",
+    
+    "//separator2": "",
+    "//adv": "--- ADVANCED BEHAVIORS ---",
+    "//adv1": "Configure these options to customize behavior for specific use cases",
+    "//adv2": "",
+    
+    "//noargs": "=== NO ARGUMENTS BEHAVIOR ===",
+    "//noargs1": "Controls what happens when you run 'wincountdown' with no arguments",
+    "//noargs2": "By default (when disabled), it shows the help screen",
+    
+    "enable_no_args_default": false,
+    "//enable_noargs": "Set to true to enable custom behavior when no arguments provided",
+    
+    "no_args_default_command": "help",
+    "//noargs_cmd1": "What to run when 'wincountdown' executed with no arguments:",
+    "//noargs_cmd2": "  - 'help' = show help screen (default)",
+    "//noargs_cmd3": "  - Any time string like '5m', '25m', '1h30m'",
+    "//noargs_cmd4": "  - Can include flags: '10m -l' = 10min looping timer",
+    "//noargs_cmd5": "Example: Set to '25m' to start a 25-minute timer by default",
+    
+    "//separator3": "",
+    "//timeonly": "=== TIME-ONLY ARGUMENTS BEHAVIOR ===",
+    "//timeonly1": "Controls what happens when you provide ONLY a time argument (no flags)",
+    "//timeonly2": "Example: Make 'wincountdown 5m' automatically run as 'wincountdown 5m -l -s'",
+    
+    "enable_time_only_defaults": false,
+    "//enable_timeonly": "Set to true to automatically add default flags when only time provided",
+    
+    "time_only_default_flags": [],
+    "//timeonly_flags1": "Array of flags to add when only time argument provided:",
+    "//timeonly_flags2": "  Example: [\\"-l\\\", \\\"-s\\\"] = loop + silent",
+    "//timeonly_flags3": "  Example: [\\"-l\\\"] = loop only",
+    "//timeonly_flags4": "  Example: [\\"-f\\\", \\\"1000\\\", \\\"-b\\\", \\\"5\\\"] = 1000Hz frequency, 5 beeps",
+    "//timeonly_flags5": "Available flags: -s (silent), -l (loop), -m (metric),",
+    "//timeonly_flags6": "  -f <hz> (frequency), -b <n> (beeps), -d <ms> (duration), -g <ms> (gap)",
+    "//timeonly_flags7": "Note: Only applies when JUST time is typed. Manual flags disable this."
+}'''
+    return config_content
+
+def load_config():
+    """Load configuration from file, create with defaults if it doesn't exist"""
+    global DEBUG
+    
+    debug_log(f"load_config() called")
+    debug_log(f"Checking for config file: {CONFIG_FILE}")
+    debug_log(f"Config file exists: {os.path.exists(CONFIG_FILE)}")
+    
+    if not os.path.exists(CONFIG_FILE):
+        # Create config file with detailed comments
+        debug_log("Config file does not exist, creating new one")
+        with open(CONFIG_FILE, 'w') as f:
+            f.write(create_config_with_comments())
+        print(f"Created default configuration file: {CONFIG_FILE}")
+        print("You can edit this file to customize default settings.\n")
+        return DEFAULT_CONFIG.copy()
+    
+    try:
+        debug_log("Attempting to read config file")
+        with open(CONFIG_FILE, 'r') as f:
+            config = json.load(f)
+        
+        debug_log(f"Raw config loaded from file: {config}")
+        
+        # Filter out comment fields (they start with //)
+        filtered_config = {k: v for k, v in config.items() if not k.startswith('//')}
+        
+        debug_log(f"Filtered config (comments removed): {filtered_config}")
+        
+        # Merge with defaults to ensure all keys exist
+        merged_config = DEFAULT_CONFIG.copy()
+        merged_config.update(filtered_config)
+        
+        # Update global DEBUG variable from config
+        DEBUG = merged_config.get('debug_mode', False)
+        debug_log(f"DEBUG mode set to: {DEBUG}")
+        
+        debug_log(f"Final merged config: {merged_config}")
+        
+        return merged_config
+    except (json.JSONDecodeError, IOError) as e:
+        error_msg = f"Warning: Could not read config file ({e}), using defaults"
+        debug_log(error_msg)
+        print(error_msg)
+        return DEFAULT_CONFIG.copy()
+
+def apply_no_args_default(config):
+    """Apply default behavior when no arguments are provided"""
+    debug_log("apply_no_args_default called")
+    debug_log(f"enable_no_args_default = {config.get('enable_no_args_default', False)}")
+    debug_log(f"no_args_default_command = {config.get('no_args_default_command', 'help')}")
+    
+    if config.get("enable_no_args_default", False):
+        default_cmd = config.get("no_args_default_command", "help")
+        
+        debug_log(f"Applying no-args default with command: {default_cmd}")
+        
+        if default_cmd == "help":
+            print_help()
+            sys.exit(0)
+        else:
+            # Insert the default command into sys.argv
+            # This simulates the user typing: wincountdown <default_cmd>
+            import shlex
+            # Use shlex to properly split the command (handles quotes and spaces)
+            sys.argv.extend(shlex.split(default_cmd))
+            
+            debug_log(f"sys.argv after extending: {sys.argv}")
+
+def apply_time_only_defaults(config, args_list):
+    """Apply default flags when only time argument is provided"""
+    debug_log("apply_time_only_defaults called")
+    debug_log(f"args_list = {args_list}")
+    debug_log(f"enable_time_only_defaults = {config.get('enable_time_only_defaults', False)}")
+    debug_log(f"time_only_default_flags = {config.get('time_only_default_flags', [])}")
+    
+    if config.get("enable_time_only_defaults", False):
+        # Check if only one argument was provided (the time)
+        # Count only non-program-name arguments
+        user_args = [arg for arg in args_list if not arg.startswith('-')]
+        flag_args = [arg for arg in args_list if arg.startswith('-')]
+        
+        debug_log(f"user_args = {user_args}")
+        debug_log(f"flag_args = {flag_args}")
+        
+        # If there's exactly one user argument (time) and no flags
+        if len(user_args) == 1 and len(flag_args) == 0:
+            default_flags = config.get("time_only_default_flags", [])
+            
+            debug_log(f"Condition met! Adding default flags: {default_flags}")
+            
+            if default_flags:
+                # Insert default flags after the time argument
+                # Make sure we're adding them as separate arguments
+                for flag in default_flags:
+                    sys.argv.append(flag)
+                
+                debug_log(f"sys.argv after adding flags: {sys.argv}")
+        else:
+            debug_log(f"Condition NOT met (user_args={len(user_args)}, flag_args={len(flag_args)})")
 
 # Windows console API structures and functions
 class COORD(ctypes.Structure):
@@ -471,13 +687,26 @@ def print_help():
   +===================================================================================================================+
 
     -s, --silent              Silent mode (no beep alert)
-    -f HZ, --freq HZ          Beep frequency in Hz (default: 800, range: 37-32767)
-    -b N, --beeps N           Number of beeps when finished (default: 3)
-    -d MS, --duration MS      Duration of each beep in milliseconds (default: 1000)
-    -g MS, --gap MS           Gap between beeps in milliseconds (default: 300)
+    -f HZ, --freq HZ          Beep frequency in Hz (default: from config, or 800)
+    -b N, --beeps N           Number of beeps when finished (default: from config, or 3)
+    -d MS, --duration MS      Duration of each beep in milliseconds (default: from config, or 1000)
+    -g MS, --gap MS           Gap between beeps in milliseconds (default: from config, or 300)
     -l, --loop                Automatically restart countdown when it reaches 0
     -m, --metric              JOKE: Display in metric time (1h=100m, 1m=100s)
     -h, --help                Show this help message
+
+  +===================================================================================================================+
+  | CONFIGURATION FILE                                                                                                |
+  +===================================================================================================================+
+
+    On first run, a 'wincountdown-config.json' file is created with default settings.
+    You can edit this file to customize:
+      - Default beep frequency, count, duration, and gap
+      - Default silent, loop, and metric mode settings
+      - Behavior when running 'wincountdown' with no arguments
+      - Auto-apply flags when only providing a time argument
+
+    See the config file for detailed comments on each option.
 
   +===================================================================================================================+
   | EXAMPLES                                                                                                          |
@@ -511,11 +740,12 @@ def print_help():
 
     Maximum time              99:59:59 (or 99:99:99 in metric mode)
     Display                   Automatically shows only relevant units
-    Default beep              800Hz, 1000ms, 3 times
+    Default beep              From config file (or 800Hz, 1000ms, 3 times if config missing)
     Loop mode beep            Only one beep before restarting
     Stop timer                Press Ctrl+C at any time
     Metric mode               Input real time, display as metric (1h=100m, 1m=100s)
                               Each metric second lasts 1 real second
+    Config file               Edit wincountdown-config.json to customize defaults
 
   +===================================================================================================================+
 
@@ -524,10 +754,40 @@ def print_help():
     print(help_text)
 
 def main():
+    # Clear previous debug log if DEBUG is enabled
+    if DEBUG and os.path.exists(DEBUG_LOG_FILE):
+        os.remove(DEBUG_LOG_FILE)
+    
+    debug_log("========== STARTING MAIN ==========")
+    
+    # Load configuration first
+    config = load_config()
+    
+    debug_log(f"sys.argv initial: {sys.argv}")
+    debug_log(f"len(sys.argv) = {len(sys.argv)}")
+    debug_log("")
+    
+    # Check if no arguments were provided (only program name)
+    if len(sys.argv) == 1:
+        debug_log("No arguments provided, calling apply_no_args_default")
+        apply_no_args_default(config)
+    
+    debug_log(f"sys.argv after no-args processing: {sys.argv}")
+    debug_log("")
+    
     # Check for help flag before parsing
     if '-h' in sys.argv or '--help' in sys.argv:
         print_help()
         sys.exit(0)
+    
+    # Apply time-only defaults if configured (before parsing)
+    if len(sys.argv) > 1:
+        debug_log(f"Calling apply_time_only_defaults with args: {sys.argv[1:]}")
+        apply_time_only_defaults(config, sys.argv[1:])
+    
+    debug_log(f"sys.argv after time-only processing: {sys.argv}")
+    debug_log("========== END DEBUG INFO ==========")
+    debug_log("")
     
     parser = argparse.ArgumentParser(
         prog='wincountdown',
@@ -537,18 +797,30 @@ def main():
     )
     
     parser.add_argument('time', nargs='?', help='Time duration (e.g., 30s, 5m, 1h30m, 1:30:00)')
-    parser.add_argument('-s', '--silent', action='store_true', help='Silent mode (no beep alert)')
-    parser.add_argument('-f', '--freq', type=int, default=800, metavar='HZ',
-                        help='Beep frequency in Hz (default: 800, range: 37-32767)')
-    parser.add_argument('-b', '--beeps', type=int, default=3, metavar='N',
-                        help='Number of beeps when finished (default: 3)')
-    parser.add_argument('-d', '--duration', type=int, default=1000, metavar='MS',
-                        help='Duration of each beep in milliseconds (default: 1000)')
-    parser.add_argument('-g', '--gap', type=int, default=300, metavar='MS',
-                        help='Gap between beeps in milliseconds (default: 300)')
+    parser.add_argument('-s', '--silent', action='store_true', 
+                        default=config.get('default_silent', False),
+                        help='Silent mode (no beep alert)')
+    parser.add_argument('-f', '--freq', type=int, 
+                        default=config.get('default_frequency', 800), 
+                        metavar='HZ',
+                        help=f'Beep frequency in Hz (default: {config.get("default_frequency", 800)}, range: 37-32767)')
+    parser.add_argument('-b', '--beeps', type=int, 
+                        default=config.get('default_beeps', 3), 
+                        metavar='N',
+                        help=f'Number of beeps when finished (default: {config.get("default_beeps", 3)})')
+    parser.add_argument('-d', '--duration', type=int, 
+                        default=config.get('default_duration', 1000), 
+                        metavar='MS',
+                        help=f'Duration of each beep in milliseconds (default: {config.get("default_duration", 1000)})')
+    parser.add_argument('-g', '--gap', type=int, 
+                        default=config.get('default_gap', 300), 
+                        metavar='MS',
+                        help=f'Gap between beeps in milliseconds (default: {config.get("default_gap", 300)})')
     parser.add_argument('-l', '--loop', action='store_true',
+                        default=config.get('default_loop', False),
                         help='Automatically restart countdown when it reaches 0 (beeps once per loop)')
     parser.add_argument('-m', '--metric', action='store_true',
+                        default=config.get('default_metric', False),
                         help='JOKE: Display in metric time (1h=100m, 1m=100s, 1 metric second = 1 real second). Input time is still real time.')
     
     args = parser.parse_args()

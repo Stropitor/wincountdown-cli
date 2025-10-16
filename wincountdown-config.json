@@ -1,0 +1,75 @@
+{
+    "//": "================================================================",
+    "//1": "WINCOUNTDOWN CONFIGURATION FILE",
+    "//2": "================================================================",
+    "//3": "This file controls default settings for the wincountdown timer.",
+    "//4": "Edit values below to customize behavior.",
+    "//5": "",
+    
+    "//debug_section": "--- DEBUG MODE ---",
+    "//debug_desc": "Enable debug logging to wincountdown-debug.log for troubleshooting",
+    
+    "debug_mode": false,
+    "//debug_note": "Set to true to enable detailed debug logging. Creates wincountdown-debug.log file with timestamps.",
+    
+    "//separator1": "",
+    "//basic": "--- BASIC DEFAULTS ---",
+    "//basic1": "These settings apply to all countdown executions unless overridden by command-line flags",
+    
+    "default_frequency": 800,
+    "//freq": "Beep frequency in Hz (range: 37-32767). Common: 440 (A note), 800 (default), 1000 (high)",
+    
+    "default_beeps": 3,
+    "//beeps": "Number of beeps when countdown finishes (minimum: 1)",
+    
+    "default_duration": 1000,
+    "//duration": "Duration of each beep in milliseconds (1000ms = 1 second)",
+    
+    "default_gap": 300,
+    "//gap": "Gap between beeps in milliseconds (only applies when beeps > 1)",
+    
+    "default_silent": false,
+    "//silent": "Silent mode: true = no beeps by default, false = beeps enabled",
+    
+    "default_loop": false,
+    "//loop": "Loop mode: true = auto-restart after finish, false = stop after finish",
+    
+    "default_metric": false,
+    "//metric": "Metric mode (joke): true = display in metric time (1h=100m, 1m=100s), false = normal time",
+    
+    "//separator2": "",
+    "//adv": "--- ADVANCED BEHAVIORS ---",
+    "//adv1": "Configure these options to customize behavior for specific use cases",
+    "//adv2": "",
+    
+    "//noargs": "=== NO ARGUMENTS BEHAVIOR ===",
+    "//noargs1": "Controls what happens when you run 'wincountdown' with no arguments",
+    "//noargs2": "By default (when disabled), it shows the help screen",
+    
+    "enable_no_args_default": false,
+    "//enable_noargs": "Set to true to enable custom behavior when no arguments provided",
+    
+    "no_args_default_command": "help",
+    "//noargs_cmd1": "What to run when 'wincountdown' executed with no arguments:",
+    "//noargs_cmd2": "  - 'help' = show help screen (default)",
+    "//noargs_cmd3": "  - Any time string like '5m', '25m', '1h30m'",
+    "//noargs_cmd4": "  - Can include flags: '10m -l' = 10min looping timer",
+    "//noargs_cmd5": "Example: Set to '25m' to start a 25-minute timer by default",
+    
+    "//separator3": "",
+    "//timeonly": "=== TIME-ONLY ARGUMENTS BEHAVIOR ===",
+    "//timeonly1": "Controls what happens when you provide ONLY a time argument (no flags)",
+    "//timeonly2": "Example: Make 'wincountdown 5m' automatically run as 'wincountdown 5m -l -s'",
+    
+    "enable_time_only_defaults": false,
+    "//enable_timeonly": "Set to true to automatically add default flags when only time provided",
+    
+    "time_only_default_flags": [],
+    "//timeonly_flags1": "Array of flags to add when only time argument provided:",
+    "//timeonly_flags2": "  Example: [\"-l\", \"-s\"] = loop + silent",
+    "//timeonly_flags3": "  Example: [\"-l\"] = loop only",
+    "//timeonly_flags4": "  Example: [\"-f\", \"1000\", \"-b\", \"5\"] = 1000Hz frequency, 5 beeps",
+    "//timeonly_flags5": "Available flags: -s (silent), -l (loop), -m (metric),",
+    "//timeonly_flags6": "  -f <hz> (frequency), -b <n> (beeps), -d <ms> (duration), -g <ms> (gap)",
+    "//timeonly_flags7": "Note: Only applies when JUST time is typed. Manual flags disable this."
+}
