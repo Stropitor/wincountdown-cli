@@ -435,11 +435,15 @@ class DisplayManager:
         else:
             time_str = f"{seconds:02d}"
         
-        lines = [""] * ASCII_HEIGHT
-        for char in time_str:
-            digit_art = self.get_ascii_digit(char)
-            for i in range(ASCII_HEIGHT):
-                lines[i] += digit_art[i] + "  "
+        # Use list comprehension and join for better performance
+        lines = []
+        for i in range(ASCII_HEIGHT):
+            line_parts = []
+            for char in time_str:
+                digit_art = self.get_ascii_digit(char)
+                line_parts.append(digit_art[i])
+                line_parts.append("  ")
+            lines.append(''.join(line_parts))
         
         return lines
     
@@ -517,16 +521,16 @@ class DisplayManager:
         # Calculate the actual width of the time display
         time_width = len(lines[0])
         
-        # Center within the box
+        # Center within the box - pre-calculate padding
         x_offset = 3 + (BORDER_WIDTH - time_width) // 2
+        left_padding = " " * x_offset
+        right_padding = " " * (120 - x_offset - time_width)
         
         # Draw all lines in one pass
         for i, line in enumerate(lines):
             console.set_position(0, 8 + i)
-            left_padding = " " * x_offset
-            right_padding = " " * (120 - x_offset - time_width)
-            full_line = left_padding + line.rstrip() + right_padding
-            print(full_line[:120], end='', flush=True)
+            # Build the full line more efficiently
+            print(f"{left_padding}{line.rstrip()}{right_padding}"[:120], end='', flush=True)
     
     def draw_finished_screen(self, show_hours, show_minutes, loop=False):
         """Draw the time's up screen"""
@@ -588,35 +592,35 @@ class CountdownTimer:
         if ':' in time_str:
             parts = time_str.split(':')
             if len(parts) == 3:
-                hours = int(parts[0])
-                minutes = int(parts[1])
-                seconds = int(parts[2])
+                hours, minutes, seconds = int(parts[0]), int(parts[1]), int(parts[2])
             elif len(parts) == 2:
-                minutes = int(parts[0])
-                seconds = int(parts[1])
+                minutes, seconds = int(parts[0]), int(parts[1])
         else:
-            # Parse format like 1h30m45s
+            # Parse format like 1h30m45s - more efficient approach
             time_str = time_str.lower()
+            
+            # Extract hours
             if 'h' in time_str:
-                h_parts = time_str.split('h')
+                h_parts = time_str.split('h', 1)
                 hours = int(h_parts[0])
-                time_str = h_parts[1] if len(h_parts) > 1 else ''
+                time_str = h_parts[1]
+            
+            # Extract minutes  
             if 'm' in time_str:
-                m_parts = time_str.split('m')
-                minutes = int(m_parts[0])
-                time_str = m_parts[1] if len(m_parts) > 1 else ''
+                m_parts = time_str.split('m', 1)
+                minutes = int(m_parts[0]) if m_parts[0] else 0
+                time_str = m_parts[1]
+            
+            # Extract seconds
             if 's' in time_str:
-                s_parts = time_str.split('s')
+                s_parts = time_str.split('s', 1)
                 seconds = int(s_parts[0]) if s_parts[0] else 0
         
-        # Always parse as real time first (in seconds)
+        # Calculate total seconds
         real_seconds = hours * 3600 + minutes * 60 + seconds
         
-        if metric:
-            # Convert real seconds to milliseconds for metric display
-            return int(real_seconds * 1000)
-        else:
-            return real_seconds
+        # Return milliseconds for metric, seconds for standard
+        return int(real_seconds * 1000) if metric else real_seconds
     
     def play_beeps(self, freq, count, duration, gap, silent, loop):
         """Play beep sounds when timer finishes"""
