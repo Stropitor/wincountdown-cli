@@ -9,30 +9,23 @@ import shlex
 from ctypes import wintypes
 from datetime import datetime
 
-# Get the directory where the script/executable is located
-if getattr(sys, 'frozen', False):
-    # Running as compiled executable
-    SCRIPT_DIR = os.path.dirname(sys.executable)
-else:
-    # Running as script
-    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+# ============================================================================
+# CONSTANTS
+# ============================================================================
 
-# Configuration file path (always in the same directory as the executable/script)
-CONFIG_FILE = os.path.join(SCRIPT_DIR, "wincountdown-config.json")
-DEBUG_LOG_FILE = os.path.join(SCRIPT_DIR, "wincountdown-debug.log")
+# Console constants
+STD_OUTPUT_HANDLE = -11
+CURSOR_SIZE = 100
+BORDER_WIDTH = 115
+ASCII_HEIGHT = 8
 
-# DEBUG will be loaded from config
-DEBUG = False
+# Time constants  
+MAX_STANDARD_SECONDS = 359999  # 99:59:59
+MAX_METRIC_MILLISECONDS = 999999000  # 99:99:99 metric
 
-def debug_log(message):
-    """Write debug message to log file if DEBUG is enabled"""
-    if DEBUG:
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-        log_message = f"[{timestamp}] {message}\n"
-        with open(DEBUG_LOG_FILE, 'a', encoding='utf-8') as f:
-            f.write(log_message)
-        # Also print to console
-        print(log_message.rstrip())
+# Display constants
+UPDATE_INTERVAL_STANDARD = 0.05
+UPDATE_INTERVAL_METRIC = 0.01
 
 # Default ASCII art for digits
 DEFAULT_ASCII_DIGITS = {
@@ -165,9 +158,108 @@ DEFAULT_CONFIG = {
     "ascii_digits": DEFAULT_ASCII_DIGITS
 }
 
-def create_config_with_comments():
-    """Create a configuration file with detailed comments"""
-    config_content = '''{
+# ============================================================================
+# WINDOWS CONSOLE API STRUCTURES
+# ============================================================================
+
+class COORD(ctypes.Structure):
+    _fields_ = [("X", ctypes.c_short), ("Y", ctypes.c_short)]
+
+class CONSOLE_CURSOR_INFO(ctypes.Structure):
+    _fields_ = [("dwSize", wintypes.DWORD), ("bVisible", wintypes.BOOL)]
+
+# ============================================================================
+# LOGGER CLASS
+# ============================================================================
+
+class Logger:
+    """Simple logger that can be enabled/disabled via config"""
+    
+    def __init__(self):
+        self.enabled = False
+        self.file_path = None
+        
+    def setup(self, enabled, file_path):
+        """Setup logger with debug mode and file path"""
+        self.enabled = enabled
+        self.file_path = file_path
+        
+        if enabled and file_path and os.path.exists(file_path):
+            os.remove(file_path)
+    
+    def log(self, message):
+        """Log message if debugging is enabled"""
+        if not self.enabled:
+            return
+            
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+        log_message = f"[{timestamp}] {message}\n"
+        
+        if self.file_path:
+            with open(self.file_path, 'a', encoding='utf-8') as f:
+                f.write(log_message)
+        print(log_message.rstrip())
+
+# Global logger instance
+logger = Logger()
+
+# ============================================================================
+# CONSOLE MANAGER CLASS
+# ============================================================================
+
+class ConsoleManager:
+    """Handles all console/terminal operations"""
+    
+    def __init__(self):
+        self.kernel32 = ctypes.windll.kernel32
+        self.h_console = self.kernel32.GetStdHandle(STD_OUTPUT_HANDLE)
+        
+    def hide_cursor(self):
+        """Hide the console cursor to prevent flickering"""
+        cursor_info = CONSOLE_CURSOR_INFO()
+        cursor_info.dwSize = CURSOR_SIZE
+        cursor_info.bVisible = False
+        self.kernel32.SetConsoleCursorInfo(self.h_console, ctypes.byref(cursor_info))
+    
+    def show_cursor(self):
+        """Show the console cursor again"""
+        cursor_info = CONSOLE_CURSOR_INFO()
+        cursor_info.dwSize = CURSOR_SIZE
+        cursor_info.bVisible = True
+        self.kernel32.SetConsoleCursorInfo(self.h_console, ctypes.byref(cursor_info))
+        
+    def set_position(self, x, y):
+        """Move cursor to specific position without clearing"""
+        coord = COORD(x, y)
+        self.kernel32.SetConsoleCursorPosition(self.h_console, coord)
+        
+    def clear_screen(self):
+        """Clear screen"""
+        os.system('cls')
+        
+    def __enter__(self):
+        """Context manager entry - hide cursor"""
+        self.hide_cursor()
+        return self
+        
+    def __exit__(self, *args):
+        """Context manager exit - show cursor"""
+        self.show_cursor()
+
+# ============================================================================
+# CONFIG MANAGER CLASS
+# ============================================================================
+
+class ConfigManager:
+    """Handles configuration loading and creation"""
+    
+    def __init__(self, script_dir):
+        self.config_file = os.path.join(script_dir, "wincountdown-config.json")
+        self.debug_log_file = os.path.join(script_dir, "wincountdown-debug.log")
+        
+    def create_config_content(self):
+        """Create a configuration file with detailed comments"""
+        return '''{
     "//": "================================================================",
     "//1": "WINCOUNTDOWN CONFIGURATION FILE",
     "//2": "================================================================",
@@ -251,551 +343,463 @@ def create_config_with_comments():
     "//ascii_art5": "TIP: Preview your changes by running a short countdown like: wincountdown 10s",
     "//ascii_art6": "",
     
-    "ascii_digits": {
-        "0": [
-            " ######### ",
-            "###     ###",
-            "###     ###",
-            "###     ###",
-            "###     ###",
-            "###     ###",
-            "###     ###",
-            " ######### "
-        ],
-        "1": [
-            "    ###    ",
-            "  #####    ",
-            "    ###    ",
-            "    ###    ",
-            "    ###    ",
-            "    ###    ",
-            "    ###    ",
-            "###########"
-        ],
-        "2": [
-            " ######### ",
-            "###     ###",
-            "        ###",
-            "      ###  ",
-            "    ###    ",
-            "  ###      ",
-            " ###       ",
-            "###########"
-        ],
-        "3": [
-            "###########",
-            "        ###",
-            "        ###",
-            "  #########",
-            "        ###",
-            "        ###",
-            "        ###",
-            "###########"
-        ],
-        "4": [
-            "     ##### ",
-            "    ###### ",
-            "   ### ### ",
-            "  ###  ### ",
-            " ###   ### ",
-            "###########",
-            "       ### ",
-            "       ### "
-        ],
-        "5": [
-            "###########",
-            "###        ",
-            "###        ",
-            "###########",
-            "        ###",
-            "        ###",
-            "###     ###",
-            " ######### "
-        ],
-        "6": [
-            "  #########",
-            " ###       ",
-            "###        ",
-            "###########",
-            "###     ###",
-            "###     ###",
-            "###     ###",
-            " ######### "
-        ],
-        "7": [
-            "###########",
-            "        ###",
-            "       ### ",
-            "      ###  ",
-            "     ###   ",
-            "    ###    ",
-            "   ###     ",
-            "   ###     "
-        ],
-        "8": [
-            " ######### ",
-            "###     ###",
-            "###     ###",
-            " ######### ",
-            "###     ###",
-            "###     ###",
-            "###     ###",
-            " ######### "
-        ],
-        "9": [
-            " ######### ",
-            "###     ###",
-            "###     ###",
-            "###     ###",
-            " ##########",
-            "        ###",
-            "       ### ",
-            "########   "
-        ],
-        ":": [
-            "           ",
-            "    ###    ",
-            "    ###    ",
-            "           ",
-            "           ",
-            "    ###    ",
-            "    ###    ",
-            "           "
-        ]
-    }
+    "ascii_digits": ''' + json.dumps(DEFAULT_ASCII_DIGITS, indent=8) + '''
 }'''
-    return config_content
+    
+    def load(self):
+        """Load configuration from file, create with defaults if it doesn't exist"""
+        logger.log(f"Loading config from: {self.config_file}")
+        logger.log(f"Config file exists: {os.path.exists(self.config_file)}")
+        
+        if not os.path.exists(self.config_file):
+            logger.log("Config file does not exist, creating new one")
+            with open(self.config_file, 'w', encoding='utf-8') as f:
+                f.write(self.create_config_content())
+            print(f"Created default configuration file: {self.config_file}")
+            print("You can edit this file to customize default settings.\n")
+            return DEFAULT_CONFIG.copy()
+        
+        try:
+            logger.log("Attempting to read config file")
+            with open(self.config_file, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+            
+            logger.log(f"Raw config loaded from file: {config}")
+            
+            # Filter out comment fields (they start with //)
+            filtered_config = {k: v for k, v in config.items() if not k.startswith('//')}
+            logger.log(f"Filtered config (comments removed): {filtered_config}")
+            
+            # Merge with defaults to ensure all keys exist
+            merged_config = DEFAULT_CONFIG.copy()
+            merged_config.update(filtered_config)
+            
+            # Validate ascii_digits if present
+            if 'ascii_digits' in filtered_config:
+                self._validate_ascii_digits(filtered_config['ascii_digits'], merged_config)
+            
+            # Setup logger with debug mode from config
+            logger.setup(merged_config.get('debug_mode', False), self.debug_log_file)
+            logger.log(f"DEBUG mode set to: {merged_config.get('debug_mode', False)}")
+            logger.log(f"Final merged config: {merged_config}")
+            
+            return merged_config
+            
+        except (json.JSONDecodeError, IOError) as e:
+            error_msg = f"Warning: Could not read config file ({e}), using defaults"
+            logger.log(error_msg)
+            print(error_msg)
+            return DEFAULT_CONFIG.copy()
+    
+    def _validate_ascii_digits(self, ascii_digits, merged_config):
+        """Validate ASCII art digits configuration"""
+        for digit in '0123456789:':
+            if digit not in ascii_digits:
+                logger.log(f"Warning: Missing ASCII art for '{digit}', using default")
+                ascii_digits[digit] = DEFAULT_ASCII_DIGITS[digit]
+            elif not isinstance(ascii_digits[digit], list) or len(ascii_digits[digit]) != ASCII_HEIGHT:
+                logger.log(f"Warning: Invalid ASCII art for '{digit}' (must be {ASCII_HEIGHT} lines), using default")
+                ascii_digits[digit] = DEFAULT_ASCII_DIGITS[digit]
 
-def load_config():
-    """Load configuration from file, create with defaults if it doesn't exist"""
-    global DEBUG
-    
-    debug_log(f"load_config() called")
-    debug_log(f"Checking for config file: {CONFIG_FILE}")
-    debug_log(f"Config file exists: {os.path.exists(CONFIG_FILE)}")
-    
-    if not os.path.exists(CONFIG_FILE):
-        # Create config file with detailed comments
-        debug_log("Config file does not exist, creating new one")
-        with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
-            f.write(create_config_with_comments())
-        print(f"Created default configuration file: {CONFIG_FILE}")
-        print("You can edit this file to customize default settings.\n")
-        return DEFAULT_CONFIG.copy()
-    
-    try:
-        debug_log("Attempting to read config file")
-        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-            config = json.load(f)
-        
-        debug_log(f"Raw config loaded from file: {config}")
-        
-        # Filter out comment fields (they start with //)
-        filtered_config = {k: v for k, v in config.items() if not k.startswith('//')}
-        
-        debug_log(f"Filtered config (comments removed): {filtered_config}")
-        
-        # Merge with defaults to ensure all keys exist
-        merged_config = DEFAULT_CONFIG.copy()
-        merged_config.update(filtered_config)
-        
-        # Validate ascii_digits if present
-        if 'ascii_digits' in filtered_config:
-            ascii_digits = filtered_config['ascii_digits']
-            # Validate that all required digits are present and properly formatted
-            for digit in '0123456789:':
-                if digit not in ascii_digits:
-                    debug_log(f"Warning: Missing ASCII art for '{digit}', using default")
-                    ascii_digits[digit] = DEFAULT_ASCII_DIGITS[digit]
-                elif not isinstance(ascii_digits[digit], list) or len(ascii_digits[digit]) != 8:
-                    debug_log(f"Warning: Invalid ASCII art for '{digit}' (must be 8 lines), using default")
-                    ascii_digits[digit] = DEFAULT_ASCII_DIGITS[digit]
-        
-        # Update global DEBUG variable from config
-        DEBUG = merged_config.get('debug_mode', False)
-        debug_log(f"DEBUG mode set to: {DEBUG}")
-        
-        debug_log(f"Final merged config: {merged_config}")
-        
-        return merged_config
-    except (json.JSONDecodeError, IOError) as e:
-        error_msg = f"Warning: Could not read config file ({e}), using defaults"
-        debug_log(error_msg)
-        print(error_msg)
-        return DEFAULT_CONFIG.copy()
+# ============================================================================
+# DISPLAY MANAGER CLASS
+# ============================================================================
 
-def apply_no_args_default(config):
-    """Apply default behavior when no arguments are provided"""
-    debug_log("apply_no_args_default called")
-    debug_log(f"enable_no_args_default = {config.get('enable_no_args_default', False)}")
-    debug_log(f"no_args_default_command = {config.get('no_args_default_command', 'help')}")
+class DisplayManager:
+    """Handles all display formatting and rendering"""
     
-    if config.get("enable_no_args_default", False):
-        default_cmd = config.get("no_args_default_command", "help")
+    def __init__(self, ascii_art):
+        self.ascii_art = ascii_art
         
-        debug_log(f"Applying no-args default with command: {default_cmd}")
-        
-        if default_cmd == "help":
-            print_help()
-            sys.exit(0)
+    def draw_border(self, char='='):
+        """Draw a border line"""
+        return f"  +{char * BORDER_WIDTH}+"
+    
+    def draw_line(self, content='', centered=False):
+        """Draw a line with optional centered content"""
+        if centered and content:
+            padding = (BORDER_WIDTH - len(content)) // 2
+            return f"  |{' ' * padding}{content}{' ' * (BORDER_WIDTH - padding - len(content))}|"
+        return f"  |{content:{BORDER_WIDTH}}|"
+    
+    def get_ascii_digit(self, digit):
+        """Return ASCII art for a single digit from config"""
+        return self.ascii_art.get(digit, ["           "] * ASCII_HEIGHT)
+    
+    def render_time(self, hours, minutes, seconds, show_hours, show_minutes):
+        """Render time as ASCII art - only show relevant units"""
+        if show_hours:
+            time_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+        elif show_minutes:
+            time_str = f"{minutes:02d}:{seconds:02d}"
         else:
-            # Insert the default command into sys.argv
-            # This simulates the user typing: wincountdown <default_cmd>
-            import shlex
-            # Use shlex to properly split the command (handles quotes and spaces)
-            sys.argv.extend(shlex.split(default_cmd))
-            
-            debug_log(f"sys.argv after extending: {sys.argv}")
-
-def apply_time_only_defaults(config, args_list):
-    """Apply default flags when only time argument is provided"""
-    debug_log("apply_time_only_defaults called")
-    debug_log(f"args_list = {args_list}")
-    debug_log(f"enable_time_only_defaults = {config.get('enable_time_only_defaults', False)}")
-    debug_log(f"time_only_default_flags = {config.get('time_only_default_flags', [])}")
+            time_str = f"{seconds:02d}"
+        
+        lines = [""] * ASCII_HEIGHT
+        for char in time_str:
+            digit_art = self.get_ascii_digit(char)
+            for i in range(ASCII_HEIGHT):
+                lines[i] += digit_art[i] + "  "
+        
+        return lines
     
-    if config.get("enable_time_only_defaults", False):
-        # Check if only one argument was provided (the time)
-        # Count only non-program-name arguments
-        user_args = [arg for arg in args_list if not arg.startswith('-')]
-        flag_args = [arg for arg in args_list if arg.startswith('-')]
-        
-        debug_log(f"user_args = {user_args}")
-        debug_log(f"flag_args = {flag_args}")
-        
-        # If there's exactly one user argument (time) and no flags
-        if len(user_args) == 1 and len(flag_args) == 0:
-            default_flags = config.get("time_only_default_flags", [])
-            
-            debug_log(f"Condition met! Adding default flags: {default_flags}")
-            
-            if default_flags:
-                # Insert default flags after the time argument
-                # Make sure we're adding them as separate arguments
-                for flag in default_flags:
-                    sys.argv.append(flag)
-                
-                debug_log(f"sys.argv after adding flags: {sys.argv}")
+    def draw_static_ui(self, total_seconds, show_hours, show_minutes, metric=False, 
+                      start_time_str="", end_time_str="", console=None):
+        """Draw the static parts of the UI once"""
+        if console:
+            console.clear_screen()
         else:
-            debug_log(f"Condition NOT met (user_args={len(user_args)}, flag_args={len(flag_args)})")
-
-# Windows console API structures and functions
-class COORD(ctypes.Structure):
-    _fields_ = [("X", ctypes.c_short), ("Y", ctypes.c_short)]
-
-class CONSOLE_CURSOR_INFO(ctypes.Structure):
-    _fields_ = [("dwSize", wintypes.DWORD), ("bVisible", wintypes.BOOL)]
-
-# Get handle to console
-kernel32 = ctypes.windll.kernel32
-h_console = kernel32.GetStdHandle(-11)  # STD_OUTPUT_HANDLE
-
-def hide_cursor():
-    """Hide the console cursor to prevent flickering"""
-    cursor_info = CONSOLE_CURSOR_INFO()
-    cursor_info.dwSize = 100
-    cursor_info.bVisible = False
-    kernel32.SetConsoleCursorInfo(h_console, ctypes.byref(cursor_info))
-
-def show_cursor():
-    """Show the console cursor again"""
-    cursor_info = CONSOLE_CURSOR_INFO()
-    cursor_info.dwSize = 100
-    cursor_info.bVisible = True
-    kernel32.SetConsoleCursorInfo(h_console, ctypes.byref(cursor_info))
-
-def set_cursor_position(x, y):
-    """Move cursor to specific position without clearing"""
-    coord = COORD(x, y)
-    kernel32.SetConsoleCursorPosition(h_console, coord)
-
-def clear_screen():
-    """Clear screen once at the start"""
-    os.system('cls')
-
-def get_ascii_digit(digit, ascii_art):
-    """Return ASCII art for a single digit from config"""
-    return ascii_art.get(digit, ["           "] * 8)
-
-def render_time(hours, minutes, seconds, show_hours, show_minutes, ascii_art):
-    """Render time as ASCII art - only show relevant units"""
-    if show_hours:
-        time_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
-    elif show_minutes:
-        time_str = f"{minutes:02d}:{seconds:02d}"
-    else:
-        time_str = f"{seconds:02d}"
-    
-    lines = [""] * 8
-    for char in time_str:
-        digit_art = get_ascii_digit(char, ascii_art)
-        for i in range(8):
-            lines[i] += digit_art[i] + "  "
-    
-    return lines
-
-def parse_time(time_str, metric=False):
-    """Parse time string in format like '1h30m', '45m', '30s', or '1:30:00'"""
-    hours = 0
-    minutes = 0
-    seconds = 0
-    
-    # Check if it's in HH:MM:SS format
-    if ':' in time_str:
-        parts = time_str.split(':')
-        if len(parts) == 3:
-            hours = int(parts[0])
-            minutes = int(parts[1])
-            seconds = int(parts[2])
-        elif len(parts) == 2:
-            minutes = int(parts[0])
-            seconds = int(parts[1])
-    else:
-        # Parse format like 1h30m45s
-        time_str = time_str.lower()
-        if 'h' in time_str:
-            h_parts = time_str.split('h')
-            hours = int(h_parts[0])
-            time_str = h_parts[1] if len(h_parts) > 1 else ''
-        if 'm' in time_str:
-            m_parts = time_str.split('m')
-            minutes = int(m_parts[0])
-            time_str = m_parts[1] if len(m_parts) > 1 else ''
-        if 's' in time_str:
-            s_parts = time_str.split('s')
-            seconds = int(s_parts[0]) if s_parts[0] else 0
-    
-    # Always parse as real time first (in seconds)
-    real_seconds = hours * 3600 + minutes * 60 + seconds
-    
-    if metric:
-        # Convert real seconds to milliseconds for metric display
-        return int(real_seconds * 1000)
-    else:
-        # Standard time in seconds
-        return real_seconds
-
-def draw_static_ui(total_seconds, show_hours, show_minutes, metric=False, start_time_str="", end_time_str=""):
-    """Draw the static parts of the UI once"""
-    clear_screen()
-    
-    # Format the initial time for display
-    if metric:
-        # Convert milliseconds to metric time units
-        total_metric_seconds = total_seconds // 1000
-        hours = total_metric_seconds // 10000
-        minutes = (total_metric_seconds % 10000) // 100
-        seconds = total_metric_seconds % 100
-    else:
-        hours = total_seconds // 3600
-        minutes = (total_seconds % 3600) // 60
-        seconds = total_seconds % 60
-    
-    if show_hours:
-        time_display = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
-    elif show_minutes:
-        time_display = f"{minutes:02d}:{seconds:02d}"
-    else:
-        time_display = f"{seconds:02d}"
-    
-    # Top border with decoration
-    print("\n")
-    print("  +" + "=" * 115 + "+")
-    print("  |" + " " * 115 + "|")
-    title = f">>>  C O U N T D O W N  [ {time_display} ]  <<<"
-    padding = (115 - len(title)) // 2
-    print("  |" + " " * padding + title + " " * (115 - padding - len(title)) + "|")
-    print("  |" + " " * 115 + "|")
-    print("  +" + "=" * 115 + "+")
-    print()
-    print()
-    
-    # Reserve space for the time display (8 lines now)
-    for _ in range(8):
+            os.system('cls')
+        
+        # Format the initial time for display
+        if metric:
+            total_metric_seconds = total_seconds // 1000
+            hours = total_metric_seconds // 10000
+            minutes = (total_metric_seconds % 10000) // 100
+            seconds = total_metric_seconds % 100
+        else:
+            hours = total_seconds // 3600
+            minutes = (total_seconds % 3600) // 60
+            seconds = total_seconds % 60
+        
+        if show_hours:
+            time_display = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+        elif show_minutes:
+            time_display = f"{minutes:02d}:{seconds:02d}"
+        else:
+            time_display = f"{seconds:02d}"
+        
+        # Top border with decoration
+        print("\n")
+        print(self.draw_border())
+        print(self.draw_line())
+        title = f">>>  C O U N T D O W N  [ {time_display} ]  <<<"
+        print(self.draw_line(title, centered=True))
+        print(self.draw_line())
+        print(self.draw_border())
         print()
+        print()
+        
+        # Reserve space for the time display
+        for _ in range(ASCII_HEIGHT):
+            print()
+        
+        print()
+        print()
+        
+        # Bottom decoration with start and end times
+        print(self.draw_border())
+        
+        # First line: labels
+        start_label = "Start time:"
+        center_text = "Press Ctrl+C to stop"
+        end_label = "End time:"
+        
+        total_side_length = len(start_label) + len(end_label)
+        remaining_space = BORDER_WIDTH - total_side_length - len(center_text)
+        left_space = remaining_space // 2
+        right_space = remaining_space - left_space
+        
+        print("  |" + start_label + " " * left_space + center_text + 
+              " " * right_space + end_label + "|")
+        
+        # Second line: actual times
+        space_between = BORDER_WIDTH - len(start_time_str) - len(end_time_str)
+        print("  |" + start_time_str + " " * space_between + end_time_str + "|")
+        
+        print(self.draw_border())
+        print("  stropitor")
     
-    print()
-    print()
+    def update_time_display(self, hours, minutes, seconds, show_hours, show_minutes, console):
+        """Update only the time display portion"""
+        lines = self.render_time(hours, minutes, seconds, show_hours, show_minutes)
+        
+        # Calculate the actual width of the time display
+        time_width = len(lines[0])
+        
+        # Center within the box
+        x_offset = 3 + (BORDER_WIDTH - time_width) // 2
+        
+        # Draw all lines in one pass
+        for i, line in enumerate(lines):
+            console.set_position(0, 8 + i)
+            left_padding = " " * x_offset
+            right_padding = " " * (120 - x_offset - time_width)
+            full_line = left_padding + line.rstrip() + right_padding
+            print(full_line[:120], end='', flush=True)
     
-    # Bottom decoration with start and end times
-    print("  +" + "=" * 115 + "+")
-    
-    # First line: "Start time:" on left, "Press Ctrl+C to stop" centered, "End time:" on right
-    start_label = "Start time:"
-    center_text = "Press Ctrl+C to stop"
-    end_label = "End time:"
-    
-    # Calculate spacing
-    total_side_length = len(start_label) + len(end_label)
-    remaining_space = 115 - total_side_length - len(center_text)
-    left_space = remaining_space // 2
-    right_space = remaining_space - left_space
-    
-    print("  |" + start_label + " " * left_space + center_text + " " * right_space + end_label + "|")
-    
-    # Second line: actual times, left and right aligned
-    space_between = 115 - len(start_time_str) - len(end_time_str)
-    print("  |" + start_time_str + " " * space_between + end_time_str + "|")
-    
-    print("  +" + "=" * 115 + "+")
-    print("  stropitor")
+    def draw_finished_screen(self, show_hours, show_minutes, loop=False):
+        """Draw the time's up screen"""
+        os.system('cls')
+        
+        print("\n")
+        print(self.draw_border())
+        print(self.draw_line())
+        
+        if loop:
+            title = ">>>  R E S T A R T I N G . . .  <<<"
+        else:
+            title = ">>>  T I M E ' S   U P !  <<<"
+        
+        print(self.draw_line(title, centered=True))
+        print(self.draw_line())
+        print(self.draw_border())
+        print()
+        print()
+        
+        # Show final time (00:00:00 or 00:00 or 00)
+        if show_hours:
+            lines = self.render_time(0, 0, 0, True, True)
+        elif show_minutes:
+            lines = self.render_time(0, 0, 0, False, True)
+        else:
+            lines = self.render_time(0, 0, 0, False, False)
+        
+        # Center the final time display
+        time_width = len(lines[0])
+        x_offset = 2 + (BORDER_WIDTH - time_width) // 2
+        
+        for line in lines:
+            print(" " * x_offset + line)
+        
+        print()
+        print()
+        print(self.draw_border())
+        print(self.draw_line())
+        print(self.draw_border())
+        print("  stropitor")
 
-def update_time_display(hours, minutes, seconds, show_hours, show_minutes, ascii_art):
-    """Update only the time display portion"""
-    lines = render_time(hours, minutes, seconds, show_hours, show_minutes, ascii_art)
-    
-    # Calculate the actual width of the time display
-    time_width = len(lines[0])
-    
-    # Center within the 115-character box (plus 2 spaces + | on left = 3 chars)
-    x_offset = 3 + (115 - time_width) // 2
-    
-    # Draw all lines in one pass to avoid distortion
-    for i, line in enumerate(lines):
-        set_cursor_position(0, 8 + i)
-        # Total terminal width needs padding to clear the line
-        # Create spacing + content + spacing (no borders on these lines)
-        left_padding = " " * (x_offset)
-        right_padding = " " * (120 - x_offset - time_width)
-        full_line = left_padding + line.rstrip() + right_padding
-        print(full_line[:120], end='', flush=True)
+# ============================================================================
+# TIMER CLASS
+# ============================================================================
 
-def countdown(total_seconds, beep_freq=800, beep_count=3, beep_duration=1000, beep_gap=300, silent=False, loop=False, metric=False, ascii_art=None):
-    """Run the countdown timer"""
-    if ascii_art is None:
-        ascii_art = DEFAULT_ASCII_DIGITS
+class CountdownTimer:
+    """Main countdown timer logic"""
     
-    hide_cursor()
+    def __init__(self, config):
+        self.config = config
+        self.display = DisplayManager(config.get('ascii_digits', DEFAULT_ASCII_DIGITS))
+        
+    def parse_time(self, time_str, metric=False):
+        """Parse time string in various formats"""
+        hours = minutes = seconds = 0
+        
+        # Check if it's in HH:MM:SS format
+        if ':' in time_str:
+            parts = time_str.split(':')
+            if len(parts) == 3:
+                hours = int(parts[0])
+                minutes = int(parts[1])
+                seconds = int(parts[2])
+            elif len(parts) == 2:
+                minutes = int(parts[0])
+                seconds = int(parts[1])
+        else:
+            # Parse format like 1h30m45s
+            time_str = time_str.lower()
+            if 'h' in time_str:
+                h_parts = time_str.split('h')
+                hours = int(h_parts[0])
+                time_str = h_parts[1] if len(h_parts) > 1 else ''
+            if 'm' in time_str:
+                m_parts = time_str.split('m')
+                minutes = int(m_parts[0])
+                time_str = m_parts[1] if len(m_parts) > 1 else ''
+            if 's' in time_str:
+                s_parts = time_str.split('s')
+                seconds = int(s_parts[0]) if s_parts[0] else 0
+        
+        # Always parse as real time first (in seconds)
+        real_seconds = hours * 3600 + minutes * 60 + seconds
+        
+        if metric:
+            # Convert real seconds to milliseconds for metric display
+            return int(real_seconds * 1000)
+        else:
+            return real_seconds
     
-    # For metric mode, we're working in milliseconds
-    # 1 metric second = 1000ms (same as real second)
-    # 1 metric minute = 100 metric seconds = 100000ms
-    # 1 metric hour = 100 metric minutes = 10000000ms
-    if metric:
-        show_hours = total_seconds >= 10000000  # >= 1 metric hour
-        show_minutes = total_seconds >= 100000   # >= 1 metric minute
-    else:
-        # Determine what units to show based on total time
-        show_hours = total_seconds >= 3600  # Show hours if >= 1 hour
-        show_minutes = total_seconds >= 60   # Show minutes if >= 1 minute
+    def play_beeps(self, freq, count, duration, gap, silent, loop):
+        """Play beep sounds when timer finishes"""
+        if silent:
+            return
+            
+        try:
+            beeps_to_play = 1 if loop else count
+            for i in range(beeps_to_play):
+                winsound.Beep(freq, duration)
+                if i < beeps_to_play - 1:
+                    time.sleep(gap / 1000.0)
+        except:
+            # Fallback to console beep
+            beeps_to_play = 1 if loop else count
+            for i in range(beeps_to_play):
+                print('\a', end='', flush=True)
+                if i < beeps_to_play - 1:
+                    time.sleep(0.5)
     
-    try:
-        while True:  # Outer loop for restart functionality
-            # Calculate start and end times
-            import datetime
-            start_datetime = datetime.datetime.now()
-            start_time_str = start_datetime.strftime("%H:%M:%S")
-            
-            # Calculate end time based on real seconds (not metric)
-            if metric:
-                duration_seconds = total_seconds / 1000  # Convert milliseconds to seconds
-            else:
-                duration_seconds = total_seconds
-            
-            end_datetime = start_datetime + datetime.timedelta(seconds=duration_seconds)
-            end_time_str = end_datetime.strftime("%H:%M:%S")
-            
-            draw_static_ui(total_seconds, show_hours, show_minutes, metric, start_time_str, end_time_str)
-            
-            start_time = time.time()
-            last_remaining = -1
-            
-            while True:
-                if metric:
-                    # In metric mode, track milliseconds
-                    elapsed_ms = int((time.time() - start_time) * 1000)
-                    remaining = total_seconds - elapsed_ms
-                else:
-                    elapsed = int(time.time() - start_time)
-                    remaining = total_seconds - elapsed
-                
-                if remaining < 0:
-                    break
-                
-                # Only update display when the second changes
-                if remaining != last_remaining:
-                    if metric:
-                        # Convert milliseconds to metric time units
-                        # 1 metric second = 1000ms
-                        total_metric_seconds = remaining // 1000
-                        hours = total_metric_seconds // 10000
-                        minutes = (total_metric_seconds % 10000) // 100
-                        seconds = total_metric_seconds % 100
-                    else:
-                        hours = remaining // 3600
-                        minutes = (remaining % 3600) // 60
-                        seconds = remaining % 60
+    def run(self, total_seconds, beep_freq=800, beep_count=3, beep_duration=1000, 
+            beep_gap=300, silent=False, loop=False, metric=False):
+        """Run the countdown timer"""
+        
+        # Determine what units to show
+        if metric:
+            show_hours = total_seconds >= 10000000  # >= 1 metric hour
+            show_minutes = total_seconds >= 100000   # >= 1 metric minute
+        else:
+            show_hours = total_seconds >= 3600
+            show_minutes = total_seconds >= 60
+        
+        with ConsoleManager() as console:
+            try:
+                while True:  # Outer loop for restart functionality
+                    # Calculate start and end times
+                    import datetime
+                    start_datetime = datetime.datetime.now()
+                    start_time_str = start_datetime.strftime("%H:%M:%S")
                     
-                    update_time_display(hours, minutes, seconds, show_hours, show_minutes, ascii_art)
-                    last_remaining = remaining
-                
-                time.sleep(0.01 if metric else 0.05)  # Check more frequently in metric mode
-            
-            # Time's up!
-            clear_screen()
-            print("\n")
-            print("  +" + "=" * 115 + "+")
-            print("  |" + " " * 115 + "|")
-            if loop:
-                title = ">>>  R E S T A R T I N G . . .  <<<"
-            else:
-                title = ">>>  T I M E ' S   U P !  <<<"
-            padding = (115 - len(title)) // 2
-            print("  |" + " " * padding + title + " " * (115 - padding - len(title)) + "|")
-            print("  |" + " " * 115 + "|")
-            print("  +" + "=" * 115 + "+")
-            print()
-            print()
-            
-            # Show final time in same format
-            if show_hours:
-                lines = render_time(0, 0, 0, True, True, ascii_art)
-            elif show_minutes:
-                lines = render_time(0, 0, 0, False, True, ascii_art)
-            else:
-                lines = render_time(0, 0, 0, False, False, ascii_art)
-            
-            # Center the final time display
-            time_width = len(lines[0])
-            x_offset = 2 + (115 - time_width) // 2
-                
-            for line in lines:
-                print(" " * x_offset + line)
-            
-            print()
-            print()
-            print("  +" + "=" * 115 + "+")
-            print("  |" + " " * 115 + "|")
-            print("  +" + "=" * 115 + "+")
-            print("  stropitor")
-            
-            # Play a beep sound alert (unless silent)
-            if not silent:
-                try:
-                    # For loop mode, just one beep
-                    beeps_to_play = 1 if loop else beep_count
-                    for i in range(beeps_to_play):
-                        winsound.Beep(beep_freq, beep_duration)  # frequency, duration in ms
-                        # Add gap between beeps (but not after the last one)
-                        if i < beeps_to_play - 1:
-                            time.sleep(beep_gap / 1000.0)
-                except:
-                    # Fallback to console beep if winsound fails
-                    beeps_to_play = 1 if loop else beep_count
-                    for i in range(beeps_to_play):
-                        print('\a', end='', flush=True)
-                        if i < beeps_to_play - 1:
-                            time.sleep(0.5)
-            
-            # If not looping, exit
-            if not loop:
-                break
-            
-            # Wait a moment before restarting
-            time.sleep(1)
+                    # Calculate end time
+                    if metric:
+                        duration_seconds = total_seconds / 1000
+                    else:
+                        duration_seconds = total_seconds
+                    
+                    end_datetime = start_datetime + datetime.timedelta(seconds=duration_seconds)
+                    end_time_str = end_datetime.strftime("%H:%M:%S")
+                    
+                    self.display.draw_static_ui(total_seconds, show_hours, show_minutes, 
+                                               metric, start_time_str, end_time_str, console)
+                    
+                    start_time = time.time()
+                    last_remaining = -1
+                    
+                    while True:
+                        if metric:
+                            elapsed_ms = int((time.time() - start_time) * 1000)
+                            remaining = total_seconds - elapsed_ms
+                        else:
+                            elapsed = int(time.time() - start_time)
+                            remaining = total_seconds - elapsed
+                        
+                        if remaining < 0:
+                            break
+                        
+                        # Only update display when the second changes
+                        if remaining != last_remaining:
+                            if metric:
+                                total_metric_seconds = remaining // 1000
+                                hours = total_metric_seconds // 10000
+                                minutes = (total_metric_seconds % 10000) // 100
+                                seconds = total_metric_seconds % 100
+                            else:
+                                hours = remaining // 3600
+                                minutes = (remaining % 3600) // 60
+                                seconds = remaining % 60
+                            
+                            self.display.update_time_display(hours, minutes, seconds, 
+                                                            show_hours, show_minutes, console)
+                            last_remaining = remaining
+                        
+                        time.sleep(UPDATE_INTERVAL_METRIC if metric else UPDATE_INTERVAL_STANDARD)
+                    
+                    # Time's up!
+                    self.display.draw_finished_screen(show_hours, show_minutes, loop)
+                    
+                    # Play beeps
+                    self.play_beeps(beep_freq, beep_count, beep_duration, beep_gap, silent, loop)
+                    
+                    if not loop:
+                        break
+                    
+                    time.sleep(1)  # Wait before restarting
+                    
+            except KeyboardInterrupt:
+                raise  # Re-raise to be handled by main
+
+# ============================================================================
+# ARGUMENT PROCESSING
+# ============================================================================
+
+def get_effective_args(config):
+    """Get effective arguments considering config defaults"""
+    logger.log("get_effective_args called")
+    args = sys.argv[1:]
     
-    finally:
-        show_cursor()
+    logger.log(f"Initial args: {args}")
+    
+    # Handle no arguments case
+    if not args:
+        logger.log(f"No args provided, checking enable_no_args_default")
+        if config.get("enable_no_args_default", False):
+            cmd = config.get("no_args_default_command", "help")
+            logger.log(f"Using no_args_default_command: {cmd}")
+            if cmd == "help":
+                return None  # Signal to show help
+            return shlex.split(cmd)
+        return None  # Show help by default
+    
+    # Handle time-only case
+    user_args = [arg for arg in args if not arg.startswith('-')]
+    flag_args = [arg for arg in args if arg.startswith('-')]
+    
+    logger.log(f"user_args: {user_args}, flag_args: {flag_args}")
+    
+    if len(user_args) == 1 and len(flag_args) == 0:
+        if config.get("enable_time_only_defaults", False):
+            default_flags = config.get("time_only_default_flags", [])
+            logger.log(f"Adding time_only_default_flags: {default_flags}")
+            args.extend(default_flags)
+    
+    logger.log(f"Final effective args: {args}")
+    return args
+
+def parse_arguments(args, config):
+    """Parse command line arguments"""
+    parser = argparse.ArgumentParser(
+        prog='wincountdown',
+        description='A countdown timer with ASCII art display for Windows',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        add_help=False
+    )
+    
+    parser.add_argument('time', nargs='?', help='Time duration')
+    parser.add_argument('-s', '--silent', action='store_true', 
+                        default=config.get('default_silent', False))
+    parser.add_argument('-f', '--freq', type=int, 
+                        default=config.get('default_frequency', 800), metavar='HZ')
+    parser.add_argument('-b', '--beeps', type=int, 
+                        default=config.get('default_beeps', 3), metavar='N')
+    parser.add_argument('-d', '--duration', type=int, 
+                        default=config.get('default_duration', 1000), metavar='MS')
+    parser.add_argument('-g', '--gap', type=int, 
+                        default=config.get('default_gap', 300), metavar='MS')
+    parser.add_argument('-l', '--loop', action='store_true',
+                        default=config.get('default_loop', False))
+    parser.add_argument('-m', '--metric', action='store_true',
+                        default=config.get('default_metric', False))
+    
+    return parser.parse_args(args)
+
+def validate_arguments(args, metric=False):
+    """Validate argument constraints"""
+    errors = []
+    
+    if not 37 <= args.freq <= 32767:
+        errors.append("Frequency must be between 37 and 32767 Hz")
+    
+    if args.beeps < 1:
+        errors.append("Number of beeps must be at least 1")
+    
+    if args.duration < 1:
+        errors.append("Beep duration must be at least 1 millisecond")
+    
+    if args.gap < 0:
+        errors.append("Beep gap cannot be negative")
+    
+    return errors
+
+# ============================================================================
+# HELP SCREEN
+# ============================================================================
 
 def print_help():
     """Print a beautifully formatted help screen"""
@@ -903,140 +907,89 @@ def print_help():
 """
     print(help_text)
 
+# ============================================================================
+# MAIN FUNCTION
+# ============================================================================
+
 def main():
-    # Clear previous debug log if DEBUG is enabled
-    if DEBUG and os.path.exists(DEBUG_LOG_FILE):
-        os.remove(DEBUG_LOG_FILE)
+    """Main entry point"""
+    # Get the directory where the script/executable is located
+    if getattr(sys, 'frozen', False):
+        script_dir = os.path.dirname(sys.executable)
+    else:
+        script_dir = os.path.dirname(os.path.abspath(__file__))
     
-    debug_log("========== STARTING MAIN ==========")
+    # Initialize config manager
+    config_manager = ConfigManager(script_dir)
     
-    # Load configuration first
-    config = load_config()
+    # Setup logger early for debugging
+    logger.log("========== STARTING MAIN ==========")
     
-    debug_log(f"sys.argv initial: {sys.argv}")
-    debug_log(f"len(sys.argv) = {len(sys.argv)}")
-    debug_log("")
+    # Load configuration
+    config = config_manager.load()
     
-    # Check if no arguments were provided (only program name)
-    if len(sys.argv) == 1:
-        debug_log("No arguments provided, calling apply_no_args_default")
-        apply_no_args_default(config)
+    logger.log(f"sys.argv initial: {sys.argv}")
     
-    debug_log(f"sys.argv after no-args processing: {sys.argv}")
-    debug_log("")
+    # Get effective arguments
+    effective_args = get_effective_args(config)
     
-    # Check for help flag before parsing
-    if '-h' in sys.argv or '--help' in sys.argv:
+    # Check for help flag
+    if effective_args is None or '-h' in sys.argv or '--help' in sys.argv:
         print_help()
         sys.exit(0)
     
-    # Apply time-only defaults if configured (before parsing)
-    if len(sys.argv) > 1:
-        debug_log(f"Calling apply_time_only_defaults with args: {sys.argv[1:]}")
-        apply_time_only_defaults(config, sys.argv[1:])
+    # Parse arguments
+    args = parse_arguments(effective_args, config)
     
-    debug_log(f"sys.argv after time-only processing: {sys.argv}")
-    debug_log("========== END DEBUG INFO ==========")
-    debug_log("")
-    
-    parser = argparse.ArgumentParser(
-        prog='wincountdown',
-        description='A countdown timer with ASCII art display for Windows',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        add_help=False  # Disable default help to use custom
-    )
-    
-    parser.add_argument('time', nargs='?', help='Time duration (e.g., 30s, 5m, 1h30m, 1:30:00)')
-    parser.add_argument('-s', '--silent', action='store_true', 
-                        default=config.get('default_silent', False),
-                        help='Silent mode (no beep alert)')
-    parser.add_argument('-f', '--freq', type=int, 
-                        default=config.get('default_frequency', 800), 
-                        metavar='HZ',
-                        help=f'Beep frequency in Hz (default: {config.get("default_frequency", 800)}, range: 37-32767)')
-    parser.add_argument('-b', '--beeps', type=int, 
-                        default=config.get('default_beeps', 3), 
-                        metavar='N',
-                        help=f'Number of beeps when finished (default: {config.get("default_beeps", 3)})')
-    parser.add_argument('-d', '--duration', type=int, 
-                        default=config.get('default_duration', 1000), 
-                        metavar='MS',
-                        help=f'Duration of each beep in milliseconds (default: {config.get("default_duration", 1000)})')
-    parser.add_argument('-g', '--gap', type=int, 
-                        default=config.get('default_gap', 300), 
-                        metavar='MS',
-                        help=f'Gap between beeps in milliseconds (default: {config.get("default_gap", 300)})')
-    parser.add_argument('-l', '--loop', action='store_true',
-                        default=config.get('default_loop', False),
-                        help='Automatically restart countdown when it reaches 0 (beeps once per loop)')
-    parser.add_argument('-m', '--metric', action='store_true',
-                        default=config.get('default_metric', False),
-                        help='JOKE: Display in metric time (1h=100m, 1m=100s, 1 metric second = 1 real second). Input time is still real time.')
-    
-    args = parser.parse_args()
-    
-    # Show custom help if no time argument provided
+    # Show help if no time provided
     if not args.time:
         print_help()
         sys.exit(1)
     
-    # Validate frequency range
-    if args.freq < 37 or args.freq > 32767:
-        print("Error: Frequency must be between 37 and 32767 Hz")
+    # Validate arguments
+    errors = validate_arguments(args, args.metric)
+    if errors:
+        for error in errors:
+            print(f"Error: {error}")
         sys.exit(1)
     
-    # Validate beep count
-    if args.beeps < 1:
-        print("Error: Number of beeps must be at least 1")
-        sys.exit(1)
-    
-    # Validate beep duration
-    if args.duration < 1:
-        print("Error: Beep duration must be at least 1 millisecond")
-        sys.exit(1)
-    
-    # Validate beep gap
-    if args.gap < 0:
-        print("Error: Beep gap cannot be negative")
-        sys.exit(1)
-    
-    # Handle metric mode
-    metric_mode = args.metric
-    
-    # Get ASCII art from config
-    ascii_art = config.get('ascii_digits', DEFAULT_ASCII_DIGITS)
+    # Initialize timer
+    timer = CountdownTimer(config)
     
     try:
-        total_seconds = parse_time(args.time, metric_mode)
+        # Parse time
+        total_seconds = timer.parse_time(args.time, args.metric)
         if total_seconds <= 0:
             print("Error: Time must be greater than 0")
             sys.exit(1)
         
-        # Cap at 99:99:99
-        if metric_mode:
-            # In metric mode, max is 99h 99m 99s in metric time (converted to milliseconds)
-            # 99:99:99 metric = 99*10000 + 99*100 + 99 = 999999 metric seconds = 999999000 milliseconds
-            max_seconds = 999999000
-        else:
-            # Standard time: 359999 seconds
-            max_seconds = 99 * 3600 + 59 * 60 + 59
-            
+        # Check maximum time
+        max_seconds = MAX_METRIC_MILLISECONDS if args.metric else MAX_STANDARD_SECONDS
+        
         if total_seconds > max_seconds:
             print(f"Error: Time exceeds maximum of 99:99:99")
-            if metric_mode:
+            if args.metric:
                 total_metric_seconds = total_seconds // 1000
-                print(f"You requested: {total_metric_seconds // 10000:02d}:{(total_metric_seconds % 10000) // 100:02d}:{total_metric_seconds % 100:02d} (metric)")
+                hours = total_metric_seconds // 10000
+                minutes = (total_metric_seconds % 10000) // 100
+                seconds = total_metric_seconds % 100
+                print(f"You requested: {hours:02d}:{minutes:02d}:{seconds:02d} (metric)")
             else:
-                print(f"You requested: {total_seconds // 3600:02d}:{(total_seconds % 3600) // 60:02d}:{total_seconds % 60:02d}")
+                hours = total_seconds // 3600
+                minutes = (total_seconds % 3600) // 60
+                seconds = total_seconds % 60
+                print(f"You requested: {hours:02d}:{minutes:02d}:{seconds:02d}")
             sys.exit(1)
         
-        countdown(total_seconds, args.freq, args.beeps, args.duration, args.gap, args.silent, args.loop, metric_mode, ascii_art)
+        # Run countdown
+        timer.run(total_seconds, args.freq, args.beeps, args.duration, 
+                 args.gap, args.silent, args.loop, args.metric)
+        
     except ValueError:
         print("Error: Invalid time format")
         sys.exit(1)
     except KeyboardInterrupt:
         print("\n\nTimer stopped!")
-        show_cursor()
         sys.exit(0)
 
 if __name__ == "__main__":
