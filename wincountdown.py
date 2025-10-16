@@ -214,7 +214,7 @@ def parse_time(time_str, metric=False):
         # Standard time in seconds
         return real_seconds
 
-def draw_static_ui(total_seconds, show_hours, show_minutes, metric=False):
+def draw_static_ui(total_seconds, show_hours, show_minutes, metric=False, start_time_str="", end_time_str=""):
     """Draw the static parts of the UI once"""
     clear_screen()
     
@@ -256,11 +256,26 @@ def draw_static_ui(total_seconds, show_hours, show_minutes, metric=False):
     print()
     print()
     
-    # Bottom decoration
+    # Bottom decoration with start and end times
     print("  +" + "=" * 115 + "+")
-    footer = "Press Ctrl+C to stop"
-    padding = (115 - len(footer)) // 2
-    print("  |" + " " * padding + footer + " " * (115 - padding - len(footer)) + "|")
+    
+    # First line: "Start time:" on left, "Press Ctrl+C to stop" centered, "End time:" on right
+    start_label = "Start time:"
+    center_text = "Press Ctrl+C to stop"
+    end_label = "End time:"
+    
+    # Calculate spacing
+    total_side_length = len(start_label) + len(end_label)
+    remaining_space = 115 - total_side_length - len(center_text)
+    left_space = remaining_space // 2
+    right_space = remaining_space - left_space
+    
+    print("  |" + start_label + " " * left_space + center_text + " " * right_space + end_label + "|")
+    
+    # Second line: actual times, left and right aligned
+    space_between = 115 - len(start_time_str) - len(end_time_str)
+    print("  |" + start_time_str + " " * space_between + end_time_str + "|")
+    
     print("  +" + "=" * 115 + "+")
     print("  stropitor")
 
@@ -302,7 +317,21 @@ def countdown(total_seconds, beep_freq=800, beep_count=3, beep_duration=1000, be
     
     try:
         while True:  # Outer loop for restart functionality
-            draw_static_ui(total_seconds, show_hours, show_minutes, metric)
+            # Calculate start and end times
+            import datetime
+            start_datetime = datetime.datetime.now()
+            start_time_str = start_datetime.strftime("%H:%M:%S")
+            
+            # Calculate end time based on real seconds (not metric)
+            if metric:
+                duration_seconds = total_seconds / 1000  # Convert milliseconds to seconds
+            else:
+                duration_seconds = total_seconds
+            
+            end_datetime = start_datetime + datetime.timedelta(seconds=duration_seconds)
+            end_time_str = end_datetime.strftime("%H:%M:%S")
+            
+            draw_static_ui(total_seconds, show_hours, show_minutes, metric, start_time_str, end_time_str)
             
             start_time = time.time()
             last_remaining = -1
