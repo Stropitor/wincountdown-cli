@@ -4,7 +4,6 @@
 
 A command-line countdown timer for Windows with ASCII art display, customizable alerts, and configuration file support.
 
-
 ## Features
 
 - Large ASCII art countdown display with customizable digit styles
@@ -17,6 +16,7 @@ A command-line countdown timer for Windows with ASCII art display, customizable 
 - Silent mode option
 - Metric time mode (1 hour = 100 minutes, 1 minute = 100 seconds)
 - Smart display (shows only relevant time units)
+- Windows-compatible audio alerts (built-in winsound module)
 - Debug mode for troubleshooting (config file or command-line flag)
 
 ## Usage
@@ -44,7 +44,7 @@ wincountdown <time> [options]
 | `-l, --loop` | Automatically restart countdown when it reaches 0 |
 | `-m, --metric` | Display in metric time (1h=100m, 1m=100s) |
 | `-c, --clock` | Clock mode - display current system time (ignores `<time>` argument) |
-| `--debug` | Enable debug mode (logs to debug.log) |
+| `--debug` | Enable debug mode (logs to %LOCALAPPDATA%\wincountdown\debug.log) |
 | `-h, --help` | Show help message |
 
 ### Examples
@@ -87,6 +87,82 @@ wincountdown 25m -l -s
 wincountdown 10s -f 1000 -b 1 -d 2000
 ```
 
+## Installation
+
+### Option 1: Install with pip (Recommended)
+
+```bash
+git clone https://github.com/Stropitor/wincountdown-windows.git
+cd wincountdown-windows
+pip install .
+```
+
+Now you can run `wincountdown` from anywhere!
+
+**Benefits:**
+- Works from any directory
+- Config stored in `%APPDATA%\wincountdown\`
+- Easy to uninstall: `pip uninstall wincountdown`
+- Easy to upgrade: `git pull && pip install --upgrade .`
+
+### Option 2: Install with setup.py
+
+```bash
+git clone https://github.com/Stropitor/wincountdown-windows.git
+cd wincountdown-windows
+python setup.py install
+```
+
+### Option 3: Run as Standalone Script
+
+No installation required - just run the Python script directly:
+
+Requirements: Python 3.6+
+
+```bash
+git clone https://github.com/Stropitor/wincountdown-windows.git
+cd wincountdown-windows
+python wincountdown.py 5m
+```
+
+**Benefits:**
+- No installation needed
+- Config stored in script directory
+- Good for testing or portable use
+
+### Option 4: Build Standalone Executable with PyInstaller
+
+Create a single `.exe` file that doesn't require Python:
+
+```bash
+pip install pyinstaller
+pyinstaller --onefile --name wincountdown wincountdown.py
+```
+
+The executable will be in the `dist/` folder. You can:
+
+**Run from current directory:**
+```cmd
+# Command Prompt
+wincountdown 5m
+
+# PowerShell
+.\wincountdown 5m
+```
+
+**Or add to PATH for system-wide access:**
+1. Copy `wincountdown.exe` to a permanent location (e.g., `C:\Tools\wincountdown\`)
+2. Open System Properties > Environment Variables
+3. Under "User variables" or "System variables", find `Path` and click Edit
+4. Click New and add the folder path
+5. Click OK to save
+6. Restart the terminal
+
+**Benefits:**
+- No Python installation required on target system
+- Portable - single executable file
+- Config stored in executable directory
+
 ## Configuration File
 
 Configuration file location depends on how you run wincountdown:
@@ -103,10 +179,10 @@ C:\Users\USERNAME\AppData\Roaming\wincountdown\config.json
 C:\Users\USERNAME\AppData\Local\wincountdown\debug.log
 ```
 
-**When running standalone (`python wincountdown.py` or `wincountdown.exe`):**
+**When running standalone (python wincountdown.py or wincountdown.exe):**
 ```
-.\config.json    # Configuration (in script directory)
-.\debug.log      # Debug logs (in script directory)
+.\config.json      # Configuration (in script directory)
+.\debug.log        # Debug logs (in script directory)
 ```
 
 The configuration file is automatically created on first run.
@@ -266,81 +342,10 @@ wincountdown --clock --debug
 ```
 
 When enabled:
-- Creates `debug.log` (location depends on installation method)
+- Creates `%LOCALAPPDATA%\wincountdown\debug.log` (or `.\debug.log` for standalone)
 - Logs detailed execution information with timestamps
 - Clears the log file on each run
 - Command-line `--debug` flag overrides config file setting
-
-## Installation
-
-### Option 1: Install via pip (Recommended)
-
-This is the easiest method and enables automatic updates:
-
-```bash
-# Install from local directory
-git clone https://github.com/Stropitor/wincountdown-windows
-cd wincountdown-windows
-pip install .
-
-# Now you can run from anywhere
-wincountdown 5m
-```
-
-**Benefits:**
-- Works from any directory
-- Config stored in `%APPDATA%\wincountdown\`
-- Easy to uninstall: `pip uninstall wincountdown`
-- Easy to upgrade: `git pull && pip install --upgrade .`
-
-### Option 2: Run Standalone Script
-
-No installation required - just run the Python script directly:
-
-Requirements: Python 3.6+
-```bash
-git clone https://github.com/Stropitor/wincountdown-windows
-cd wincountdown-windows
-python wincountdown.py 5m
-```
-
-**Benefits:**
-- No installation needed
-- Config stored in script directory
-- Good for testing or portable use
-
-### Option 3: Build Standalone Executable with PyInstaller
-
-Create a single `.exe` file that doesn't require Python:
-
-```bash
-pip install pyinstaller
-pyinstaller --onefile --name wincountdown wincountdown.py
-```
-
-The executable will be in the `dist/` folder. You can:
-
-**Run from current directory:**
-```cmd
-# Command Prompt
-wincountdown 5m
-
-# PowerShell
-.\wincountdown 5m
-```
-
-**Or add to PATH for system-wide access:**
-1. Copy `wincountdown.exe` to a permanent location (e.g., `C:\Tools\wincountdown\`)
-2. Open System Properties → Environment Variables
-3. Under "User variables" or "System variables", find `Path` and click Edit
-4. Click New and add the folder path
-5. Click OK to save
-6. Restart the terminal
-
-**Benefits:**
-- No Python installation required on target system
-- Portable - single executable file
-- Config stored in executable directory
 
 ## Notes
 
@@ -352,18 +357,18 @@ wincountdown 5m
 - Loop mode plays only one beep before restarting
 - Metric mode: 1 hour = 100 minutes, 1 minute = 100 seconds. Each metric second = 1 real second. Input time is in real time.
 - Press Ctrl+C to stop the timer or exit clock mode
-- Configuration file is created automatically on first run
+- Configuration file is created automatically on first run at `%APPDATA%\wincountdown\config.json`
 - Command-line flags override config file settings
-- Config file location depends on installation method (see Configuration File section above)
 - ASCII art digits can be customized in the config file
-- Debug mode: Use `--debug` flag or enable in config file. Logs to `debug.log`
+- Debug mode: Use `--debug` flag or enable in config file. Logs to `%LOCALAPPDATA%\wincountdown\debug.log`
+- Uses Windows winsound module for audio alerts (no additional dependencies required)
 
 ## Troubleshooting
 
 **Config not working:**
-1. Enable debug mode (set `"debug_mode": true`)
-2. Check `debug.log` for errors (location depends on installation method)
-3. Verify `config.json` is valid JSON
+1. Enable debug mode (set `"debug_mode": true` in `%APPDATA%\wincountdown\config.json`)
+2. Check `%LOCALAPPDATA%\wincountdown\debug.log` for errors
+3. Verify config file is valid JSON
 4. Delete the config file to regenerate with defaults
 
 **ASCII art looks wrong:**
@@ -375,20 +380,78 @@ wincountdown 5m
 
 **Timer not visible:**
 - Terminal window must be at least 120 characters wide
-- Maximize the terminal window
+- Maximize the terminal window or use a larger font
 
 **No sound:**
 - Check that `"default_silent": false` in config
 - Verify system volume is not muted
 - Try a different frequency with `-f` flag
+- Windows uses built-in winsound module (no additional dependencies needed)
+- Some frequencies may not be audible on all systems; try values between 200-2000 Hz
 
 **Debug log not created:**
 - Use `--debug` flag: `wincountdown 5m --debug`
 - Alternatively, ensure `"debug_mode": true` is set in the config file
-- Check write permissions in the directory
-- Log file location depends on installation method (see Configuration File section above)
+- Check write permissions: `dir %LOCALAPPDATA%\wincountdown\`
+- Ensure `%LOCALAPPDATA%\wincountdown\` directory exists (created automatically on first run)
 
 **Unicode characters not displaying:**
-- Terminal must support Unicode (Windows Terminal recommended)
-- Config file must be saved as UTF-8 encoding
+- Ensure your terminal supports UTF-8 encoding
+- Windows Terminal (recommended) has full Unicode support
+- Legacy Command Prompt may have limited Unicode support
 - Try simpler ASCII characters if Unicode blocks don't display
+- Config file must be saved as UTF-8 encoding
+
+**ANSI escape codes visible (garbled output):**
+- Your terminal may not support ANSI escape sequences
+- Use Windows Terminal or PowerShell for best compatibility
+- Legacy Command Prompt may show escape codes in older Windows versions
+- Windows 10+ has native ANSI support enabled by default
+
+## Development
+
+### Project Structure
+
+```
+wincountdown-windows/
+├── wincountdown.py          # Main application (single file)
+├── setup.py                 # Python packaging
+├── LICENSE                  # GNU GPLv3
+├── README.md                # This file
+├── .gitignore               # Git ignore rules
+│
+├── docs/                    # Documentation
+│   ├── INSTALL.md           # Installation & testing guide
+│   ├── PORTING_NOTES.md     # Linux→Windows porting details
+│   └── CODEBASE_OVERVIEW.md # Complete code documentation
+│
+├── packaging/               # Distribution packages
+│   └── examples/            # Example configurations
+│       └── wincountdown-config.json
+│
+└── screenshots/             # Example screenshots
+    └── screenshot_1.png
+```
+
+### Additional Documentation
+
+For more detailed information, see:
+- **[Installation Guide](docs/INSTALL.md)** - Detailed installation instructions and troubleshooting
+- **[Codebase Overview](docs/CODEBASE_OVERVIEW.md)** - Complete code documentation and architecture
+- **[Porting Notes](docs/PORTING_NOTES.md)** - Details about the Linux→Windows port
+
+### Contributing
+
+Contributions are welcome! Please feel free to submit issues or pull requests.
+
+## License
+
+GNU General Public License v3.0 - see [LICENSE](LICENSE) file for details.
+
+## Credits
+
+Created by stropitor
+
+## Related Projects
+
+- [wincountdown-linux](https://github.com/Stropitor/wincountdown-linux) - Linux version
