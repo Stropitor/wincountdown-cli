@@ -44,7 +44,7 @@ wincountdown <time> [options]
 | `-l, --loop` | Automatically restart countdown when it reaches 0 |
 | `-m, --metric` | Display in metric time (1h=100m, 1m=100s) |
 | `-c, --clock` | Clock mode - display current system time (ignores `<time>` argument) |
-| `--debug` | Enable debug mode (logs to wincountdown-debug.log) |
+| `--debug` | Enable debug mode (logs to debug.log) |
 | `-h, --help` | Show help message |
 
 ### Examples
@@ -89,7 +89,27 @@ wincountdown 10s -f 1000 -b 1 -d 2000
 
 ## Configuration File
 
-`wincountdown-config.json` is automatically created on first run in the same directory as the executable.
+Configuration file location depends on how you run wincountdown:
+
+**When installed via pip:**
+```
+%APPDATA%\wincountdown\config.json       # Configuration
+%LOCALAPPDATA%\wincountdown\debug.log    # Debug logs
+```
+
+Full paths (typically):
+```
+C:\Users\USERNAME\AppData\Roaming\wincountdown\config.json
+C:\Users\USERNAME\AppData\Local\wincountdown\debug.log
+```
+
+**When running standalone (`python wincountdown.py` or `wincountdown.exe`):**
+```
+.\config.json    # Configuration (in script directory)
+.\debug.log      # Debug logs (in script directory)
+```
+
+The configuration file is automatically created on first run.
 
 ### Basic Settings
 
@@ -246,50 +266,81 @@ wincountdown --clock --debug
 ```
 
 When enabled:
-- Creates `wincountdown-debug.log` in the same directory
+- Creates `debug.log` (location depends on installation method)
 - Logs detailed execution information with timestamps
 - Clears the log file on each run
 - Command-line `--debug` flag overrides config file setting
 
-## Building from Source
+## Installation
+
+### Option 1: Install via pip (Recommended)
+
+This is the easiest method and enables automatic updates:
+
+```bash
+# Install from local directory
+git clone https://github.com/Stropitor/wincountdown-windows
+cd wincountdown-windows
+pip install .
+
+# Now you can run from anywhere
+wincountdown 5m
+```
+
+**Benefits:**
+- Works from any directory
+- Config stored in `%APPDATA%\wincountdown\`
+- Easy to uninstall: `pip uninstall wincountdown`
+- Easy to upgrade: `git pull && pip install --upgrade .`
+
+### Option 2: Run Standalone Script
+
+No installation required - just run the Python script directly:
+
+Requirements: Python 3.6+
+```bash
+git clone https://github.com/Stropitor/wincountdown-windows
+cd wincountdown-windows
+python wincountdown.py 5m
+```
+
+**Benefits:**
+- No installation needed
+- Config stored in script directory
+- Good for testing or portable use
+
+### Option 3: Build Standalone Executable with PyInstaller
+
+Create a single `.exe` file that doesn't require Python:
+
 ```bash
 pip install pyinstaller
 pyinstaller --onefile --name wincountdown wincountdown.py
 ```
 
-The executable will be in the `dist/` folder.
+The executable will be in the `dist/` folder. You can:
 
-## Installation & Running
-
-### Option 1: Run Python Script
-
-Requirements: Python 3.8+
-```bash
-git clone https://github.com/Stropitor/wincountdown-cli
-cd wincountdown-cli
-python wincountdown.py 5m
-```
-
-### Option 2: Run Executable (Command Prompt)
-
+**Run from current directory:**
 ```cmd
+# Command Prompt
 wincountdown 5m
-```
 
-### Option 3: Run Executable (PowerShell)
-
-```powershell
+# PowerShell
 .\wincountdown 5m
 ```
 
-### Option 4: Add to PATH
-
+**Or add to PATH for system-wide access:**
 1. Copy `wincountdown.exe` to a permanent location (e.g., `C:\Tools\wincountdown\`)
 2. Open System Properties → Environment Variables
 3. Under "User variables" or "System variables", find `Path` and click Edit
 4. Click New and add the folder path
 5. Click OK to save
 6. Restart the terminal
+
+**Benefits:**
+- No Python installation required on target system
+- Portable - single executable file
+- Config stored in executable directory
 
 ## Notes
 
@@ -303,16 +354,16 @@ wincountdown 5m
 - Press Ctrl+C to stop the timer or exit clock mode
 - Configuration file is created automatically on first run
 - Command-line flags override config file settings
-- Config file location: Same directory as the script/executable
+- Config file location depends on installation method (see Configuration File section above)
 - ASCII art digits can be customized in the config file
-- Debug mode: Use `--debug` flag or enable in config file. Logs to `wincountdown-debug.log`
+- Debug mode: Use `--debug` flag or enable in config file. Logs to `debug.log`
 
 ## Troubleshooting
 
 **Config not working:**
 1. Enable debug mode (set `"debug_mode": true`)
-2. Check `wincountdown-debug.log` for errors
-3. Verify `wincountdown-config.json` is valid JSON
+2. Check `debug.log` for errors (location depends on installation method)
+3. Verify `config.json` is valid JSON
 4. Delete the config file to regenerate with defaults
 
 **ASCII art looks wrong:**
@@ -335,7 +386,7 @@ wincountdown 5m
 - Use `--debug` flag: `wincountdown 5m --debug`
 - Alternatively, ensure `"debug_mode": true` is set in the config file
 - Check write permissions in the directory
-- Log file is created in the same folder as the script/executable
+- Log file location depends on installation method (see Configuration File section above)
 
 **Unicode characters not displaying:**
 - Terminal must support Unicode (Windows Terminal recommended)

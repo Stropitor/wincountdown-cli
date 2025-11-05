@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+"""
+wincountdown - A countdown timer and clock for Windows
+with large ASCII art display and customizable alerts
+"""
+
 import sys
 import time
 import os
@@ -8,6 +14,7 @@ import json
 import shlex
 from ctypes import wintypes
 from datetime import datetime
+from pathlib import Path
 
 # ============================================================================
 # CONSTANTS
@@ -252,10 +259,40 @@ class ConsoleManager:
 
 class ConfigManager:
     """Handles configuration loading and creation"""
-    
-    def __init__(self, script_dir):
-        self.config_file = os.path.join(script_dir, "wincountdown-config.json")
-        self.debug_log_file = os.path.join(script_dir, "wincountdown-debug.log")
+
+    def __init__(self, script_dir=None):
+        # Detect if running as installed package or standalone script
+        if script_dir and os.path.exists(script_dir):
+            # Running as standalone script - use script directory
+            is_installed = False
+        else:
+            # Check if we're in site-packages (installed)
+            try:
+                import wincountdown
+                is_installed = 'site-packages' in wincountdown.__file__ or 'Scripts' in wincountdown.__file__
+            except (ImportError, AttributeError):
+                is_installed = False
+
+        if is_installed:
+            # Installed via pip - use Windows AppData directories
+            config_dir = Path.home() / 'AppData' / 'Roaming' / 'wincountdown'
+            cache_dir = Path.home() / 'AppData' / 'Local' / 'wincountdown'
+        else:
+            # Running standalone - use script directory
+            if script_dir:
+                config_dir = Path(script_dir)
+                cache_dir = Path(script_dir)
+            else:
+                config_dir = Path.cwd()
+                cache_dir = Path.cwd()
+
+        # Create directories if they don't exist
+        config_dir.mkdir(parents=True, exist_ok=True)
+        if config_dir != cache_dir:
+            cache_dir.mkdir(parents=True, exist_ok=True)
+
+        self.config_file = str(config_dir / 'config.json')
+        self.debug_log_file = str(cache_dir / 'debug.log')
         
     def create_config_content(self):
         """Create a configuration file with detailed comments"""
@@ -268,7 +305,7 @@ class ConfigManager:
     "//5": "",
 
     "//debug_section": "--- DEBUG MODE ---",
-    "//debug_note1": "Logs detailed execution info to wincountdown-debug.log",
+    "//debug_note1": "Logs detailed execution info to debug.log (location depends on install method)",
     "//debug_note2": "Can also be enabled with --debug flag (recommended for troubleshooting)",
 
     "debug_mode": false,
@@ -857,7 +894,7 @@ def parse_arguments(args, config):
     parser.add_argument('-c', '--clock', action='store_true',
                         help='Clock mode - display current system time')
     parser.add_argument('--debug', action='store_true',
-                        help='Enable debug mode (logs to wincountdown-debug.log)')
+                        help='Enable debug mode (logs to debug.log)')
 
     return parser.parse_args(args)
 
@@ -936,10 +973,10 @@ def print_help():
       -c, --clock            Clock mode - display current system time (ignores <time>)
 
     Utility:
-      --debug                Enable debug logging to wincountdown-debug.log
+      --debug                Enable debug logging to debug.log
       -h, --help             Show this help message
 
-    Note: All beep settings and defaults can be configured in wincountdown-config.json
+    Note: All beep settings and defaults can be configured in config.json
 
   +===================================================================================================================+
   | EXAMPLES                                                                                                          |
@@ -970,7 +1007,8 @@ def print_help():
   | CONFIGURATION FILE                                                                                                |
   +===================================================================================================================+
 
-    File: wincountdown-config.json (created automatically on first run)
+    File: config.json (created automatically on first run)
+    Location: %APPDATA%\\wincountdown\\ (installed) or script directory (standalone)
 
     Customize:
       - Default beep settings (frequency, count, duration, gap)
@@ -1012,7 +1050,7 @@ def print_help():
   +===================================================================================================================+
 
     - Press Ctrl+C to stop timer or exit clock at any time
-    - Edit wincountdown-config.json to set your preferred defaults
+    - Edit config.json to set your preferred defaults
     - Use --debug flag if something isn't working as expected
     - Loop mode plays only one beep before restarting (not the full beep count)
     - Metric mode: input is real time, but display shows metric equivalent
