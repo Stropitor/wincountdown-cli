@@ -8,6 +8,7 @@ A command-line countdown timer for Windows with ASCII art display, customizable 
 ## Features
 
 - Large ASCII art countdown display with customizable digit styles
+- Clock mode displays current system time in 24-hour format
 - Real-time start and end time display
 - Customizable beep alerts (frequency, duration, count, gap)
 - Configuration file for persistent settings
@@ -16,7 +17,7 @@ A command-line countdown timer for Windows with ASCII art display, customizable 
 - Silent mode option
 - Metric time mode (1 hour = 100 minutes, 1 minute = 100 seconds)
 - Smart display (shows only relevant time units)
-- Debug mode for troubleshooting
+- Debug mode for troubleshooting (config file or command-line flag)
 
 ## Usage
 ```bash
@@ -42,6 +43,8 @@ wincountdown <time> [options]
 | `-g MS, --gap MS` | Gap between beeps in milliseconds (default: from config, or 300) |
 | `-l, --loop` | Automatically restart countdown when it reaches 0 |
 | `-m, --metric` | Display in metric time (1h=100m, 1m=100s) |
+| `-c, --clock` | Clock mode - display current system time (ignores `<time>` argument) |
+| `--debug` | Enable debug mode (logs to wincountdown-debug.log) |
 | `-h, --help` | Show help message |
 
 ### Examples
@@ -70,6 +73,14 @@ wincountdown 1m -f 880 -b 3 -d 200 -g 100
 # Metric time
 wincountdown 5m --metric
 wincountdown 1h -m
+
+# Clock mode
+wincountdown --clock
+wincountdown -c
+
+# Debug mode
+wincountdown 5m --debug
+wincountdown --clock --debug
 
 # Combinations
 wincountdown 25m -l -s
@@ -219,8 +230,15 @@ Note: This only applies when providing just the time. Manual flags disable these
 
 ## Debug Mode
 
-Debug mode can be enabled in the configuration file:
+Debug mode can be enabled in two ways:
 
+**Option 1: Command-line flag (recommended)**
+```bash
+wincountdown 5m --debug
+wincountdown --clock --debug
+```
+
+**Option 2: Configuration file**
 ```json
 {
   "debug_mode": true
@@ -231,6 +249,7 @@ When enabled:
 - Creates `wincountdown-debug.log` in the same directory
 - Logs detailed execution information with timestamps
 - Clears the log file on each run
+- Command-line `--debug` flag overrides config file setting
 
 ## Building from Source
 ```bash
@@ -275,16 +294,18 @@ wincountdown 5m
 ## Notes
 
 - Maximum time: 99:59:59 (or 99:99:99 in metric mode)
+- **Clock mode:** Displays current system time in 24-hour format (HH:MM:SS). Always shows 24-hour time regardless of system settings. Press Ctrl+C to exit.
 - Timer automatically shows only relevant units (seconds, MM:SS, or HH:MM:SS)
 - Start time and end time are displayed at the bottom
 - Beep alert plays when countdown finishes
 - Loop mode plays only one beep before restarting
 - Metric mode: 1 hour = 100 minutes, 1 minute = 100 seconds. Each metric second = 1 real second. Input time is in real time.
-- Press Ctrl+C to stop the timer
+- Press Ctrl+C to stop the timer or exit clock mode
 - Configuration file is created automatically on first run
 - Command-line flags override config file settings
 - Config file location: Same directory as the script/executable
 - ASCII art digits can be customized in the config file
+- Debug mode: Use `--debug` flag or enable in config file. Logs to `wincountdown-debug.log`
 
 ## Troubleshooting
 
@@ -311,7 +332,8 @@ wincountdown 5m
 - Try a different frequency with `-f` flag
 
 **Debug log not created:**
-- Ensure `"debug_mode": true` is set in the config file
+- Use `--debug` flag: `wincountdown 5m --debug`
+- Alternatively, ensure `"debug_mode": true` is set in the config file
 - Check write permissions in the directory
 - Log file is created in the same folder as the script/executable
 

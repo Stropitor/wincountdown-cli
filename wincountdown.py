@@ -263,86 +263,95 @@ class ConfigManager:
     "//": "================================================================",
     "//1": "WINCOUNTDOWN CONFIGURATION FILE",
     "//2": "================================================================",
-    "//3": "This file controls default settings for the wincountdown timer.",
-    "//4": "Edit values below to customize behavior.",
+    "//3": "Customize default settings for wincountdown timer and clock.",
+    "//4": "All settings can be overridden by command-line flags.",
     "//5": "",
-    
+
     "//debug_section": "--- DEBUG MODE ---",
-    "//debug_desc": "Enable debug logging to wincountdown-debug.log for troubleshooting",
-    
+    "//debug_note1": "Logs detailed execution info to wincountdown-debug.log",
+    "//debug_note2": "Can also be enabled with --debug flag (recommended for troubleshooting)",
+
     "debug_mode": false,
-    "//debug_note": "Set to true to enable detailed debug logging. Creates wincountdown-debug.log file with timestamps.",
-    
+
     "//separator1": "",
-    "//basic": "--- BASIC DEFAULTS ---",
-    "//basic1": "These settings apply to all countdown executions unless overridden by command-line flags",
-    
+    "//defaults_section": "--- DEFAULT SETTINGS ---",
+    "//defaults_note": "These values are used unless overridden by command-line flags",
+
+    "//beep_header": "",
+    "//beep_desc": "Beep Alert Configuration",
+
     "default_frequency": 800,
-    "//freq": "Beep frequency in Hz (range: 37-32767). Common: 440 (A note), 800 (default), 1000 (high)",
-    
+    "//freq_note": "Frequency in Hz (37-32767). Examples: 440 (musical A), 800 (default), 1000 (high pitch)",
+
     "default_beeps": 3,
-    "//beeps": "Number of beeps when countdown finishes (minimum: 1)",
-    
+    "//beeps_note": "Number of times to beep when countdown finishes (minimum: 1)",
+
     "default_duration": 1000,
-    "//duration": "Duration of each beep in milliseconds (1000ms = 1 second)",
-    
+    "//duration_note": "How long each beep lasts in milliseconds (1000ms = 1 second)",
+
     "default_gap": 300,
-    "//gap": "Gap between beeps in milliseconds (only applies when beeps > 1)",
-    
+    "//gap_note": "Pause between beeps in milliseconds (only used when beeps > 1)",
+
+    "//mode_header": "",
+    "//mode_desc": "Default Mode Settings",
+
     "default_silent": false,
-    "//silent": "Silent mode: true = no beeps by default, false = beeps enabled",
-    
+    "//silent_note": "Silent mode: true = no beeps, false = beeps enabled. Override with -s flag.",
+
     "default_loop": false,
-    "//loop": "Loop mode: true = auto-restart after finish, false = stop after finish",
-    
+    "//loop_note": "Loop mode: true = auto-restart timer, false = stop after finish. Override with -l flag.",
+
     "default_metric": false,
-    "//metric": "Metric mode (joke): true = display in metric time (1h=100m, 1m=100s), false = normal time",
-    
+    "//metric_note": "Metric time (joke mode): true = display in base-100 time (1h=100m, 1m=100s), false = normal time",
+
     "//separator2": "",
-    "//adv": "--- ADVANCED BEHAVIORS ---",
-    "//adv1": "Configure these options to customize behavior for specific use cases",
-    "//adv2": "",
-    
-    "//noargs": "=== NO ARGUMENTS BEHAVIOR ===",
-    "//noargs1": "Controls what happens when you run 'wincountdown' with no arguments",
-    "//noargs2": "By default (when disabled), it shows the help screen",
-    
+    "//advanced_section": "--- ADVANCED BEHAVIORS ---",
+    "//advanced_note": "These options enable power-user features and custom workflows",
+
+    "//noargs_header": "",
+    "//noargs_desc": "No-Arguments Behavior",
+    "//noargs_explain": "Controls what happens when you type 'wincountdown' with no arguments",
+
     "enable_no_args_default": false,
-    "//enable_noargs": "Set to true to enable custom behavior when no arguments provided",
-    
+    "//enable_noargs_note": "Set to true to run a custom command instead of showing help screen",
+
     "no_args_default_command": "help",
-    "//noargs_cmd1": "What to run when 'wincountdown' executed with no arguments:",
-    "//noargs_cmd2": "  - 'help' = show help screen (default)",
-    "//noargs_cmd3": "  - Any time string like '5m', '25m', '1h30m'",
-    "//noargs_cmd4": "  - Can include flags: '10m -l' = 10min looping timer",
-    "//noargs_cmd5": "Example: Set to '25m' to start a 25-minute timer by default",
-    
-    "//separator3": "",
-    "//timeonly": "=== TIME-ONLY ARGUMENTS BEHAVIOR ===",
-    "//timeonly1": "Controls what happens when you provide ONLY a time argument (no flags)",
-    "//timeonly2": "Example: Make 'wincountdown 5m' automatically run as 'wincountdown 5m -l -s'",
-    
+    "//noargs_cmd_note1": "Options:",
+    "//noargs_cmd_note2": "  'help' = show help screen (default behavior)",
+    "//noargs_cmd_note3": "  '25m' = start 25-minute timer immediately",
+    "//noargs_cmd_note4": "  '5m -l -s' = start 5-minute silent looping timer",
+    "//noargs_cmd_note5": "  '--clock' = launch clock mode",
+    "//noargs_cmd_example": "Example: Set to '25m' for instant Pomodoro timer",
+
+    "//timeonly_header": "",
+    "//timeonly_desc": "Time-Only Arguments Behavior",
+    "//timeonly_explain": "Auto-inject flags when user provides ONLY a time (no other flags)",
+    "//timeonly_example": "Example: Make 'wincountdown 5m' behave like 'wincountdown 5m -l -s'",
+
     "enable_time_only_defaults": false,
-    "//enable_timeonly": "Set to true to automatically add default flags when only time provided",
-    
+    "//enable_timeonly_note": "Set to true to automatically add flags when only time is provided",
+
     "time_only_default_flags": [],
-    "//timeonly_flags1": "Array of flags to add when only time argument provided:",
-    "//timeonly_flags2": "  Example: [\\"-l\\\", \\\"-s\\\"] = loop + silent",
-    "//timeonly_flags3": "  Example: [\\"-l\\\"] = loop only",
-    "//timeonly_flags4": "  Example: [\\"-f\\\", \\\"1000\\\", \\\"-b\\\", \\\"5\\\"] = 1000Hz frequency, 5 beeps",
-    "//timeonly_flags5": "Available flags: -s (silent), -l (loop), -m (metric),",
-    "//timeonly_flags6": "  -f <hz> (frequency), -b <n> (beeps), -d <ms> (duration), -g <ms> (gap)",
-    "//timeonly_flags7": "Note: Only applies when JUST time is typed. Manual flags disable this.",
-    
-    "//separator4": "",
-    "//ascii_art_section": "=== ASCII ART CUSTOMIZATION ===",
-    "//ascii_art1": "Customize the appearance of digits (0-9) and colon (:) in the countdown display",
-    "//ascii_art2": "Each digit must be exactly 8 lines tall and have consistent width",
-    "//ascii_art3": "Use any characters you want: #, *, @, █, ░, etc.",
-    "//ascii_art4": "TIP: Keep all digits the same width for best alignment (11 chars recommended)",
-    "//ascii_art5": "TIP: Preview your changes by running a short countdown like: wincountdown 10s",
-    "//ascii_art6": "",
-    
+    "//timeonly_flags_note1": "Flags to auto-add when user types just time (e.g., 'wincountdown 5m'):",
+    "//timeonly_flags_note2": "  [\\"-l\\\", \\\"-s\\\"] = always loop and silent",
+    "//timeonly_flags_note3": "  [\\"-l\\\"] = always loop",
+    "//timeonly_flags_note4": "  [\\"-f\\\", \\\"1000\\\", \\\"-b\\\", \\\"5\\\"] = custom beep pattern",
+    "//timeonly_flags_note5": "Available flags: -s -l -m -f -b -d -g",
+    "//timeonly_flags_note6": "Note: Only works when NO flags are typed. Manual flags disable this behavior.",
+
+    "//separator3": "",
+    "//ascii_section": "--- ASCII ART CUSTOMIZATION ---",
+    "//ascii_note1": "Customize how digits (0-9) and colon (:) appear in the display",
+    "//ascii_note2": "Use any characters: # * @ █ ░ ▓ or plain text",
+    "//ascii_note3": "",
+    "//ascii_rules": "Rules:",
+    "//ascii_rules1": "  - Each digit must be exactly 8 lines tall",
+    "//ascii_rules2": "  - Keep all digits the same width (11 characters recommended)",
+    "//ascii_rules3": "  - Invalid/missing digits automatically fall back to defaults",
+    "//ascii_rules4": "",
+    "//ascii_tip": "Tip: Test your changes with: wincountdown 10s",
+    "//ascii_blank": "",
+
     "ascii_digits": ''' + json.dumps(DEFAULT_ASCII_DIGITS, indent=8) + '''
 }'''
     
@@ -535,22 +544,22 @@ class DisplayManager:
     def draw_finished_screen(self, show_hours, show_minutes, loop=False):
         """Draw the time's up screen"""
         os.system('cls')
-        
+
         print("\n")
         print(self.draw_border())
         print(self.draw_line())
-        
+
         if loop:
             title = ">>>  R E S T A R T I N G . . .  <<<"
         else:
             title = ">>>  T I M E ' S   U P !  <<<"
-        
+
         print(self.draw_line(title, centered=True))
         print(self.draw_line())
         print(self.draw_border())
         print()
         print()
-        
+
         # Show final time (00:00:00 or 00:00 or 00)
         if show_hours:
             lines = self.render_time(0, 0, 0, True, True)
@@ -558,18 +567,55 @@ class DisplayManager:
             lines = self.render_time(0, 0, 0, False, True)
         else:
             lines = self.render_time(0, 0, 0, False, False)
-        
+
         # Center the final time display
         time_width = len(lines[0])
         x_offset = 2 + (BORDER_WIDTH - time_width) // 2
-        
+
         for line in lines:
             print(" " * x_offset + line)
-        
+
         print()
         print()
         print(self.draw_border())
         print(self.draw_line())
+        print(self.draw_border())
+        print("  stropitor")
+
+    def draw_clock_ui(self, console=None):
+        """Draw the static parts of the clock UI once"""
+        if console:
+            console.clear_screen()
+        else:
+            os.system('cls')
+
+        # Top border with decoration
+        print("\n")
+        print(self.draw_border())
+        print(self.draw_line())
+        title = ">>>  C L O C K   M O D E  <<<"
+        print(self.draw_line(title, centered=True))
+        print(self.draw_line())
+        print(self.draw_border())
+        print()
+        print()
+
+        # Reserve space for the time display
+        for _ in range(ASCII_HEIGHT):
+            print()
+
+        print()
+        print()
+
+        # Bottom decoration
+        print(self.draw_border())
+
+        center_text = "Press Ctrl+C to exit"
+        left_space = (BORDER_WIDTH - len(center_text)) // 2
+        right_space = BORDER_WIDTH - left_space - len(center_text)
+
+        print("  |" + " " * left_space + center_text + " " * right_space + "|")
+
         print(self.draw_border())
         print("  stropitor")
 
@@ -719,6 +765,34 @@ class CountdownTimer:
             except KeyboardInterrupt:
                 raise  # Re-raise to be handled by main
 
+    def run_clock(self):
+        """Run the clock mode - displays current system time"""
+        with ConsoleManager() as console:
+            try:
+                # Draw the static UI once
+                self.display.draw_clock_ui(console)
+
+                last_second = -1
+
+                while True:
+                    # Get current time
+                    now = datetime.now()
+                    hours = now.hour
+                    minutes = now.minute
+                    seconds = now.second
+
+                    # Only update display when the second changes
+                    if seconds != last_second:
+                        # Always show hours and minutes in clock mode
+                        self.display.update_time_display(hours, minutes, seconds,
+                                                        True, True, console)
+                        last_second = seconds
+
+                    time.sleep(0.05)  # Update every 50ms
+
+            except KeyboardInterrupt:
+                raise  # Re-raise to be handled by main
+
 # ============================================================================
 # ARGUMENT PROCESSING
 # ============================================================================
@@ -780,7 +854,11 @@ def parse_arguments(args, config):
                         default=config.get('default_loop', False))
     parser.add_argument('-m', '--metric', action='store_true',
                         default=config.get('default_metric', False))
-    
+    parser.add_argument('-c', '--clock', action='store_true',
+                        help='Clock mode - display current system time')
+    parser.add_argument('--debug', action='store_true',
+                        help='Enable debug mode (logs to wincountdown-debug.log)')
+
     return parser.parse_args(args)
 
 def validate_arguments(args, metric=False):
@@ -820,90 +898,124 @@ def print_help():
   |                                                                                                                   |
   +===================================================================================================================+
 
-  A countdown timer with ASCII art display and customizable beep alerts.
+  A countdown timer and clock for Windows with large ASCII art display, customizable alerts, and configuration.
 
   +===================================================================================================================+
   | USAGE                                                                                                             |
   +===================================================================================================================+
 
-    wincountdown <time> [options]
+    wincountdown <time> [options]      Start a countdown timer
+    wincountdown --clock               Display current system time (24-hour format)
 
   +===================================================================================================================+
   | TIME FORMATS                                                                                                      |
   +===================================================================================================================+
 
-    Seconds only     30s, 90s, 500s
-    Minutes only     5m, 45m, 240m
-    Hours only       2h, 10h
-    Combined         1h30m, 2h15m30s, 45m30s
-    Colon format     1:30:00 (HH:MM:SS), 45:30 (MM:SS)
+    Seconds only         30s, 90s, 500s
+    Minutes only         5m, 45m, 240m
+    Hours only           2h, 10h
+    Combined             1h30m, 2h15m30s, 45m30s
+    Colon format         1:30:00 (HH:MM:SS), 45:30 (MM:SS)
 
   +===================================================================================================================+
   | OPTIONS                                                                                                           |
   +===================================================================================================================+
 
-    -s, --silent              Silent mode (no beep alert)
-    -f HZ, --freq HZ          Beep frequency in Hz (default: from config, or 800)
-    -b N, --beeps N           Number of beeps when finished (default: from config, or 3)
-    -d MS, --duration MS      Duration of each beep in milliseconds (default: from config, or 1000)
-    -g MS, --gap MS           Gap between beeps in milliseconds (default: from config, or 300)
-    -l, --loop                Automatically restart countdown when it reaches 0
-    -m, --metric              JOKE: Display in metric time (1h=100m, 1m=100s)
-    -h, --help                Show this help message
+    Countdown Options:
+      -s, --silent           No beep alert when countdown finishes
+      -l, --loop             Auto-restart countdown when it reaches zero
+      -m, --metric           Display in metric time: 1h=100m, 1m=100s (joke mode)
 
-  +===================================================================================================================+
-  | CONFIGURATION FILE                                                                                                |
-  +===================================================================================================================+
+    Beep Customization:
+      -f HZ, --freq HZ       Beep frequency in Hz (37-32767, default: 800)
+      -b N, --beeps N        Number of beeps when finished (default: 3)
+      -d MS, --duration MS   Duration of each beep in milliseconds (default: 1000)
+      -g MS, --gap MS        Gap between beeps in milliseconds (default: 300)
 
-    On first run, a 'wincountdown-config.json' file is created with default settings.
-    You can edit this file to customize:
-      - Default beep frequency, count, duration, and gap
-      - Default silent, loop, and metric mode settings
-      - Behavior when running 'wincountdown' with no arguments
-      - Auto-apply flags when only providing a time argument
-      - ASCII art for digits 0-9 and colon (:)
+    Other Modes:
+      -c, --clock            Clock mode - display current system time (ignores <time>)
 
-    See the config file for detailed comments on each option.
+    Utility:
+      --debug                Enable debug logging to wincountdown-debug.log
+      -h, --help             Show this help message
+
+    Note: All beep settings and defaults can be configured in wincountdown-config.json
 
   +===================================================================================================================+
   | EXAMPLES                                                                                                          |
   +===================================================================================================================+
 
-    Basic countdowns
+    Basic Timers
       wincountdown 30s                       30 second countdown
       wincountdown 5m                        5 minute countdown
-      wincountdown 1h30m                     1 hour 30 minutes
-      wincountdown 90s                       Automatically displays as 01:30
+      wincountdown 1h30m                     1 hour 30 minute countdown
 
-    Silent and loop modes
-      wincountdown 10m --silent              No beep alert
-      wincountdown 25m --loop                Repeating timer
-      wincountdown 5m -l -s                  Loop mode, silent
+    Common Use Cases
+      wincountdown 25m -l                    Pomodoro timer (loops automatically)
+      wincountdown 10m -s                    Silent 10 minute timer
+      wincountdown 5m -l -s                  Silent looping timer
 
-    Custom beep patterns
-      wincountdown 1m --freq 440             Use 440Hz beep
-      wincountdown 30s --beeps 5             Beep 5 times
-      wincountdown 1h --duration 500         500ms beeps
-      wincountdown 5m --gap 100              100ms gap between beeps
-      wincountdown 1m -f 880 -b 3 -d 200     Fully custom pattern
+    Custom Alerts
+      wincountdown 1m -f 440 -b 5            440Hz beep, 5 times
+      wincountdown 30s -d 500 -g 200         500ms beeps with 200ms gaps
 
-    Metric time (joke mode)
-      wincountdown 5m --metric               5 real minutes in metric display
-      wincountdown 1h -m                     1 real hour in metric display
+    Clock Mode
+      wincountdown --clock                   Display current time (24-hour format)
+      wincountdown -c                        Same as above
+
+    Debug & Troubleshooting
+      wincountdown 5m --debug                Run with debug logging enabled
 
   +===================================================================================================================+
-  | NOTES                                                                                                             |
+  | CONFIGURATION FILE                                                                                                |
   +===================================================================================================================+
 
-    Maximum time              99:59:59 (or 99:99:99 in metric mode)
-    Display                   Automatically shows only relevant units
-    Default beep              From config file (or 800Hz, 1000ms, 3 times if config missing)
-    Loop mode beep            Only one beep before restarting
-    Stop timer                Press Ctrl+C at any time
-    Metric mode               Input real time, display as metric (1h=100m, 1m=100s)
-                              Each metric second lasts 1 real second
-    Config file               Edit wincountdown-config.json to customize defaults
-    ASCII art                 Customize digit appearance in config file
+    File: wincountdown-config.json (created automatically on first run)
+
+    Customize:
+      - Default beep settings (frequency, count, duration, gap)
+      - Default modes (silent, loop, metric)
+      - No-args behavior (e.g., auto-run "25m" when no arguments provided)
+      - Time-only defaults (e.g., auto-add "-l -s" when only time is specified)
+      - ASCII art for digits 0-9 and colon
+
+    The config file includes detailed comments explaining each option.
+
+  +===================================================================================================================+
+  | KEY FEATURES                                                                                                      |
+  +===================================================================================================================+
+
+    Display
+      - Large ASCII art time display with customizable digit styles
+      - Smart display: shows only relevant units (59s / 05:30 / 1:30:00)
+      - Real-time start and end time shown during countdown
+      - Maximum time: 99:59:59 (99:99:99 in metric mode)
+
+    Clock Mode
+      - Display current system time in 24-hour format (HH:MM:SS)
+      - Always shows 24-hour time regardless of system settings
+      - Press Ctrl+C to exit
+
+    Alerts & Modes
+      - Customizable beep frequency, duration, count, and gaps
+      - Loop mode: auto-restart timer indefinitely
+      - Silent mode: countdown without sound
+      - Metric time: joke mode displaying base-100 time
+
+    Configuration
+      - Persistent settings via JSON config file
+      - Advanced behaviors: no-args defaults, time-only flag injection
+      - Command-line flags override config file settings
+
+  +===================================================================================================================+
+  | QUICK TIPS                                                                                                        |
+  +===================================================================================================================+
+
+    - Press Ctrl+C to stop timer or exit clock at any time
+    - Edit wincountdown-config.json to set your preferred defaults
+    - Use --debug flag if something isn't working as expected
+    - Loop mode plays only one beep before restarting (not the full beep count)
+    - Metric mode: input is real time, but display shows metric equivalent
 
   +===================================================================================================================+
 
@@ -922,15 +1034,26 @@ def main():
         script_dir = os.path.dirname(sys.executable)
     else:
         script_dir = os.path.dirname(os.path.abspath(__file__))
-    
+
     # Initialize config manager
     config_manager = ConfigManager(script_dir)
-    
+
+    # Check for --debug flag early (before full argument parsing)
+    debug_flag_enabled = '--debug' in sys.argv
+    if debug_flag_enabled:
+        logger.setup(True, config_manager.debug_log_file)
+
     # Setup logger early for debugging
     logger.log("========== STARTING MAIN ==========")
-    
+    logger.log(f"Debug flag from command line: {debug_flag_enabled}")
+
     # Load configuration
     config = config_manager.load()
+
+    # Override config debug mode if --debug flag is present
+    if debug_flag_enabled:
+        config['debug_mode'] = True
+        logger.log("Debug mode enabled via --debug flag")
     
     logger.log(f"sys.argv initial: {sys.argv}")
     
@@ -944,7 +1067,16 @@ def main():
     
     # Parse arguments
     args = parse_arguments(effective_args, config)
-    
+
+    # Handle clock mode
+    if args.clock:
+        timer = CountdownTimer(config)
+        try:
+            timer.run_clock()
+        except KeyboardInterrupt:
+            print("\n\nClock stopped!")
+            sys.exit(0)
+
     # Show help if no time provided
     if not args.time:
         print_help()
