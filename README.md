@@ -20,6 +20,7 @@ A command-line countdown timer for Windows with ASCII art display, customizable 
 - Debug mode for troubleshooting (config file or command-line flag)
 
 ## Usage
+
 ```bash
 wincountdown <time> [options]
 ```
@@ -48,6 +49,7 @@ wincountdown <time> [options]
 | `-h, --help` | Show help message |
 
 ### Examples
+
 ```bash
 # Basic countdowns
 wincountdown 30s
@@ -97,7 +99,7 @@ cd wincountdown-windows
 pip install .
 ```
 
-Now you can run `wincountdown` from anywhere!
+The command is then available system-wide.
 
 **Benefits:**
 - Works from any directory
@@ -115,7 +117,7 @@ python setup.py install
 
 ### Option 3: Run as Standalone Script
 
-No installation required - just run the Python script directly:
+No installation required - the Python script can be run directly.
 
 Requirements: Python 3.6+
 
@@ -132,16 +134,15 @@ python wincountdown.py 5m
 
 ### Option 4: Build Standalone Executable with PyInstaller
 
-Create a single `.exe` file that doesn't require Python:
+Create a single `.exe` file that does not require Python:
 
 ```bash
 pip install pyinstaller
 pyinstaller --onefile --name wincountdown wincountdown.py
 ```
 
-The executable will be in the `dist/` folder. You can:
+The executable will be in the `dist/` folder. It can be run from the current directory:
 
-**Run from current directory:**
 ```cmd
 # Command Prompt
 wincountdown 5m
@@ -150,7 +151,7 @@ wincountdown 5m
 .\wincountdown 5m
 ```
 
-**Or add to PATH for system-wide access:**
+To enable system-wide access, the executable should be added to PATH:
 1. Copy `wincountdown.exe` to a permanent location (e.g., `C:\Tools\wincountdown\`)
 2. Open System Properties > Environment Variables
 3. Under "User variables" or "System variables", find `Path` and click Edit
@@ -165,7 +166,7 @@ wincountdown 5m
 
 ## Configuration File
 
-Configuration file location depends on how you run wincountdown:
+Configuration file location depends on how wincountdown is run:
 
 **When installed via pip:**
 ```
@@ -209,7 +210,7 @@ Digits (0-9) and colon (:) can be customized in the `ascii_digits` section.
 **Requirements:**
 - Each digit must be exactly 8 lines tall
 - All digits should have consistent width (11 characters recommended)
-- Any characters can be used: `#`, `*`, `@`, `█`, `░`, `▓`, etc.
+- Any characters can be used: `#`, `*`, `@`, `█`, `▒`, `▓`, etc.
 
 **Example - Default style:**
 ```json
@@ -350,7 +351,7 @@ When enabled:
 ## Notes
 
 - Maximum time: 99:59:59 (or 99:99:99 in metric mode)
-- **Clock mode:** Displays current system time in 24-hour format (HH:MM:SS). Always shows 24-hour time regardless of system settings. Press Ctrl+C to exit.
+- Clock mode displays current system time in 24-hour format (HH:MM:SS). Always shows 24-hour time regardless of system settings. Press Ctrl+C to exit.
 - Timer automatically shows only relevant units (seconds, MM:SS, or HH:MM:SS)
 - Start time and end time are displayed at the bottom
 - Beep alert plays when countdown finishes
@@ -396,16 +397,16 @@ When enabled:
 - Ensure `%LOCALAPPDATA%\wincountdown\` directory exists (created automatically on first run)
 
 **Unicode characters not displaying:**
-- Ensure your terminal supports UTF-8 encoding
-- Windows Terminal (recommended) has full Unicode support
-- Legacy Command Prompt may have limited Unicode support
-- Try simpler ASCII characters if Unicode blocks don't display
+- Terminal must support UTF-8 encoding
+- Windows Terminal has full Unicode support
+- Legacy Command Prompt has limited Unicode support
+- Use simpler ASCII characters if Unicode blocks fail to render
 - Config file must be saved as UTF-8 encoding
 
 **ANSI escape codes visible (garbled output):**
-- Your terminal may not support ANSI escape sequences
-- Use Windows Terminal or PowerShell for best compatibility
-- Legacy Command Prompt may show escape codes in older Windows versions
+- Terminal does not support ANSI escape sequences
+- Windows Terminal or PowerShell provide ANSI compatibility
+- Legacy Command Prompt shows escape codes in older Windows versions
 - Windows 10+ has native ANSI support enabled by default
 
 ## Development
@@ -422,7 +423,6 @@ wincountdown-windows/
 │
 ├── docs/                    # Documentation
 │   ├── INSTALL.md           # Installation & testing guide
-│   ├── PORTING_NOTES.md     # Linux→Windows porting details
 │   └── CODEBASE_OVERVIEW.md # Complete code documentation
 │
 ├── packaging/               # Distribution packages
@@ -438,11 +438,10 @@ wincountdown-windows/
 For more detailed information, see:
 - **[Installation Guide](docs/INSTALL.md)** - Detailed installation instructions and troubleshooting
 - **[Codebase Overview](docs/CODEBASE_OVERVIEW.md)** - Complete code documentation and architecture
-- **[Porting Notes](docs/PORTING_NOTES.md)** - Details about the Linux→Windows port
 
 ### Contributing
 
-Contributions are welcome! Please feel free to submit issues or pull requests.
+Contributions are welcome. Please submit issues or pull requests.
 
 ## License
 
@@ -455,3 +454,4 @@ Created by stropitor
 ## Related Projects
 
 - [wincountdown-linux](https://github.com/Stropitor/wincountdown-linux) - Linux version
+- [wincountdown-mac](https://github.com/Stropitor/wincountdown-mac) - Mac version
