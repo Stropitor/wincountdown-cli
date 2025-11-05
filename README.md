@@ -266,7 +266,7 @@ The executable will be in the `dist/` folder.
 Requirements: Python 3.8+
 ```bash
 git clone https://github.com/Stropitor/wincountdown-cli
-cd wincountdown
+cd wincountdown-cli
 python wincountdown.py 5m
 ```
 
